@@ -5,14 +5,14 @@ description: Use local HTTP commands to query, draw, modify, and inspect EasyEDA
 
 # AI Command Engine
 
-Skill documentation version: `2026.10.28`. This skill is installed and updated independently of the EDA extension and proxy. Their source and releases are in [the plugin repository](https://github.com/quhuii-lgtm/easyeda-aicommand); this skill lives in [its own repository](https://github.com/quhuii-lgtm/easyeda-aicommand-skill). Use the selected EDA instance’s `/help` for available commands.
+Skill documentation version: `2026.10.28.1`. This skill is installed and updated independently of the EDA extension and proxy. Their source and releases are in [the plugin repository](https://github.com/quhuii-lgtm/easyeda-aicommand); this skill lives in [its own repository](https://github.com/quhuii-lgtm/easyeda-aicommand-skill). Use the selected EDA instance’s `/help` for available commands.
 
 
 Use this skill to operate EasyEDA Pro. See [Connection and setup](references/setup.md) for connection, instance selection, and parameter lookup. [简体中文](SKILL_ZH.md)
 
-## v0.20.124 prepared package (not installed or host-accepted)
+## v0.20.124 GitHub release (host acceptance pending)
 
-The v0.20.124 package is prepared. It has not been installed or accepted on an EDA host. The development-source fixes preserve pin, path, and coordinate-array order during task deduplication; release completed routing tasks from the running-task slot; and reuse the existing layer-name mapping for `routeTrack`, layer visibility, and layer locking. ID-set deduplication, duplicate-submission protection for unconfirmed tasks, and existing track readback remain. The existing layer-number path gained no all-layer enumeration or new limit. The v0.20.123 installed-package acceptance record below remains unchanged.
+Publication status for plugin v0.20.124 is listed on the [GitHub release page](https://github.com/quhuii-lgtm/easyeda-aicommand/releases/tag/v0.20.124). Its final three fixes preserve pin, path, and coordinate-array order during task deduplication; release completed routing tasks from the running-task slot; and reuse the existing layer-name mapping for `routeTrack`, layer visibility, and layer locking. These fixes passed 10 local regressions, TypeScript checking, and a production build only; they have not been installed or accepted on an EDA host. ID-set deduplication, duplicate-submission protection for unconfirmed tasks, and existing track readback remain. The existing layer-number path gained no all-layer enumeration or new limit. The v0.20.123 installed-package acceptance record below remains unchanged.
 
 ## v0.20.123 mixed rules and geometry combination (installed; bounded host results)
 

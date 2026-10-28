@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.10.28.1
+
+- Versioned the standalone skill package as `v2026.10.28.1`, independently of plugin version `v0.20.124`.
+- Updated the plugin release-page link and retained pending host acceptance for its final three fixes.
+
 ## 2026.10.28
 
 - Synced the standalone skill documentation and prepared the skill-only repository layout.

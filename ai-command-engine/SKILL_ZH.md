@@ -5,14 +5,14 @@ description: 通过本地 HTTP 指令查询、绘制、修改和检查嘉立创 
 
 # AI Command Engine
 
-技能文档版本：`2026.10.28`。技能与EDA插件、代理分别安装和更新。插件源码及发布见[插件仓库](https://github.com/quhuii-lgtm/easyeda-aicommand)，技能在[独立技能仓库](https://github.com/quhuii-lgtm/easyeda-aicommand-skill)维护；可用指令以目标实例的 `/help` 为准。
+技能文档版本：`2026.10.28.1`。技能与EDA插件、代理分别安装和更新。插件源码及发布见[插件仓库](https://github.com/quhuii-lgtm/easyeda-aicommand)，技能在[独立技能仓库](https://github.com/quhuii-lgtm/easyeda-aicommand-skill)维护；可用指令以目标实例的 `/help` 为准。
 
 
 [English](SKILL.md) | 中文备用
 
-## 0.20.124 打包交付，待安装验收（2026-10-28）
+## 0.20.124 版本说明，待宿主验收
 
-过度限制复查后，开发源码修正三项：任务去重保留引脚、路径和坐标数组顺序；已确认结束的路由任务不再占用运行槽；routeTrack、层显示和层锁定共用已有层名映射。删除ID的集合去重、未确认任务防重复提交及原有走线读回保持。没有给原有层号路径增加全层枚举或新上限。此批已纳入0.20.124交付包，尚未安装或进行新版宿主验收；当前已安装123仍按原能力使用。
+插件 v0.20.124 的发布信息见[GitHub发布页](https://github.com/quhuii-lgtm/easyeda-aicommand/releases/tag/v0.20.124)。开发源码修正三项：任务去重保留引脚、路径和坐标数组顺序；已确认结束的路由任务不再占用运行槽；routeTrack、层显示和层锁定共用已有层名映射。最后三项修正仅通过本地10项回归、TypeScript检查和生产构建，尚未安装或进行新版宿主验收。删除ID的集合去重、未确认任务防重复提交及原有走线读回保持。没有给原有层号路径增加全层枚举或新上限。下方0.20.123已安装版本的限定验收记录保持不变。
 
 ## 0.20.123 混合规则与几何组合（已安装，限定实机结果）
 
