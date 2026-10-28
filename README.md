@@ -2,11 +2,11 @@
 
 This repository distributes the standalone `ai-command-engine` skill for AI assistants that can load agent skills. It contains skill instructions, supporting references, and a Python helper. It does not contain the EasyEDA plugin runtime, bridge source, or Node.js dependencies.
 
-The skill documentation version is **2026.10.28.2**. It is independent of the plugin version. The plugin repository is [quhuii-lgtm/easyeda-aicommand](https://github.com/quhuii-lgtm/easyeda-aicommand); the plugin/source version covered by this skill is [v0.20.124](https://github.com/quhuii-lgtm/easyeda-aicommand/releases/tag/v0.20.124).
+The skill documentation version is **2026.10.28.3**. It is independent of the plugin version. The plugin repository is [quhuii-lgtm/easyeda-aicommand](https://github.com/quhuii-lgtm/easyeda-aicommand); the plugin/source version covered by this skill is [v0.20.125](https://github.com/quhuii-lgtm/easyeda-aicommand/releases/tag/v0.20.125).
 
 ## Install
 
-Download `ai-command-engine-skill_v2026.10.28.2_en-zh.zip` from the [v2026.10.28.2 skill release](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/tag/v2026.10.28.2), or clone or download this repository's source. Copy the complete `ai-command-engine` directory into the skills directory used by your AI tool, then restart or reload that tool if needed. Keep `SKILL.md`, `SKILL_ZH.md`, `references/`, `scripts/`, `VERSION`, and `LICENSE` together. `SKILL.md` is the English entry point; `SKILL_ZH.md` and `references/zh/` provide Chinese instructions.
+Download `ai-command-engine-skill_v2026.10.28.3_en-zh.zip` from the [v2026.10.28.3 skill release](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/tag/v2026.10.28.3), or clone or download this repository's source. Copy the complete `ai-command-engine` directory into the skills directory used by your AI tool, then restart or reload that tool if needed. Keep `SKILL.md`, `SKILL_ZH.md`, `references/`, `scripts/`, `VERSION`, and `LICENSE` together. `SKILL.md` is the English entry point; `SKILL_ZH.md` and `references/zh/` provide Chinese instructions.
 
 Installing the skill does not require Node.js or the plugin source unless you intend to connect to EasyEDA through the plugin. For that connection, follow the [plugin setup guide](https://github.com/quhuii-lgtm/easyeda-aicommand/blob/main/docs/QUICKSTART.md); the required Node.js version is at least 20.17, and the complete plugin source and dependencies are required. Copying only the bridge script is insufficient.
 
@@ -28,7 +28,7 @@ The skill does not grant permission to modify drawings. Authorize any drawing ch
 
 ## Release and verification status
 
-The v2026.10.28.2 skill package and publication status are available on its [GitHub release](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/tag/v2026.10.28.2). A public repository or release does not prove that an AI tool has installed or loaded the skill. Verify installation in the intended AI tool separately.
+The v2026.10.28.3 skill package and publication status are available on its [GitHub release](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/tag/v2026.10.28.3). A public repository or release does not prove that an AI tool has installed or loaded the skill. Verify installation in the intended AI tool separately.
 
 Plugin source, releases, and the plugin's full historical changelog remain in [quhuii-lgtm/easyeda-aicommand](https://github.com/quhuii-lgtm/easyeda-aicommand). This repository's changelog records only skill documentation maintenance and the repository split.
 

@@ -2,11 +2,11 @@
 
 本仓库独立分发供 AI 工具加载的 `ai-command-engine` 技能，包含技能说明、配套参考、Python 助手。不包含 EasyEDA 插件运行时、桥接源码或 Node.js 依赖。
 
-技能文档版本为 **2026.10.28.2**，与插件版本独立。插件仓库是 [quhuii-lgtm/easyeda-aicommand](https://github.com/quhuii-lgtm/easyeda-aicommand)，本文对应的插件/源码版本为 [v0.20.124](https://github.com/quhuii-lgtm/easyeda-aicommand/releases/tag/v0.20.124)。
+技能文档版本为 **2026.10.28.3**，与插件版本独立。插件仓库是 [quhuii-lgtm/easyeda-aicommand](https://github.com/quhuii-lgtm/easyeda-aicommand)，本文对应的插件/源码版本为 [v0.20.125](https://github.com/quhuii-lgtm/easyeda-aicommand/releases/tag/v0.20.125)。
 
 ## 安装
 
-从 [v2026.10.28.2 技能发布页](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/tag/v2026.10.28.2)下载 `ai-command-engine-skill_v2026.10.28.2_en-zh.zip`，也可以克隆或下载本仓库源码。将完整的 `ai-command-engine` 目录复制到 AI 工具使用的技能目录，必要时重启或重新加载工具。请保留 `SKILL.md`、`SKILL_ZH.md`、`references/`、`scripts/`、`VERSION` 和 `LICENSE` 的相对位置。`SKILL.md` 是英文入口，`SKILL_ZH.md` 和 `references/zh/` 提供中文说明。
+从 [v2026.10.28.3 技能发布页](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/tag/v2026.10.28.3)下载 `ai-command-engine-skill_v2026.10.28.3_en-zh.zip`，也可以克隆或下载本仓库源码。将完整的 `ai-command-engine` 目录复制到 AI 工具使用的技能目录，必要时重启或重新加载工具。请保留 `SKILL.md`、`SKILL_ZH.md`、`references/`、`scripts/`、`VERSION` 和 `LICENSE` 的相对位置。`SKILL.md` 是英文入口，`SKILL_ZH.md` 和 `references/zh/` 提供中文说明。
 
 安装技能不需要 Node.js 或插件源码，除非要通过插件连接 EasyEDA。连接时请按[插件安装指南](https://github.com/quhuii-lgtm/easyeda-aicommand/blob/main/docs/QUICKSTART.md)准备环境；Node.js 需要至少 20.17，并需要完整插件源码及依赖。只复制桥接脚本不足以完成连接。
 
@@ -28,7 +28,7 @@
 
 ## 发布和验证状态
 
-v2026.10.28.2 技能包与发布状态见[GitHub发布页](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/tag/v2026.10.28.2)。仓库或发布页公开，不代表 AI 工具已安装或加载技能。请在目标 AI 工具中单独检查安装状态。
+v2026.10.28.3 技能包与发布状态见[GitHub发布页](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/tag/v2026.10.28.3)。仓库或发布页公开，不代表 AI 工具已安装或加载技能。请在目标 AI 工具中单独检查安装状态。
 
 插件源码、插件发布包和完整插件历史记录仍在 [quhuii-lgtm/easyeda-aicommand](https://github.com/quhuii-lgtm/easyeda-aicommand)。本仓库只记录技能文档维护和仓库拆分。
 

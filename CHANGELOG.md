@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.10.28.3
+
+- Clarified that ARC duplicate/split checks compare tracks only within the same layer and net; other tracks follow normal checks.
+- Updated the corresponding plugin link to v0.20.125. No test data or development history added to the installable skill.
+
 ## 2026.10.28.2
 
 - Replaced the long entry point with concise setup, execution rules, and direct task navigation.
