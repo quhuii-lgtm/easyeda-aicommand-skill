@@ -355,7 +355,3 @@ Read only the files needed for the current task. For state or command-help queri
 | Attribute, label, netlist, save, or recovery problems | [Troubleshooting](references/pitfalls.md) |
 | Plugin error evidence and issue reporting | [Issue reporting](references/issue-reporting.md) |
 | Develop, modify, or review plugin commands | [Plugin development requirements](references/插件开发要求.md); use extension-dev-skill for extension APIs and live debugging |
-
-
-
-

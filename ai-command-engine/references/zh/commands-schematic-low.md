@@ -39,4 +39,3 @@ EDA 4.1.78 实机调用下列 3 条指令均明确报需要 EDA 4.2。`schematic
 | `schematic.setAttribute` | 改器件属性（如位号 R?→R4，key=Designator）。<br>⚠️ 只能改已存在属性。<br>Footprint 别写裸名/空串（见 pitfalls G1/G2） | 调整本节已有对象时使用。 | primitiveId、key 须为非空字符串；value 须为字符串，可显式用空串清值。只能修改已有属性。 |
 
 `schematic.connectPin` v0.20.51 保留引脚坐标精度，不再取整连接端点；EDA 4.1.78 的半格四方向及整数共五例已核对端点、网表和保存重开结果。此结论不代表整图 DRC 或其他接线功能通过。
-

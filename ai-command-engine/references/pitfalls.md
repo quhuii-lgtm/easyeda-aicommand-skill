@@ -86,11 +86,3 @@ See [remaining PCB topics](commands-pcb-special.md#020110-remaining-b2-work-part
 - Preserve unknown for 15 precision-ambiguous faces; do not treat them as association defects. Whole-board production acceptance and complete source localization are outside this result.
 
 See [PCB no-net DSN topic](commands-pcb-special.md#020112-b2-empty-net-dsn-adaptation-host-acceptance-passed).
-
-
-
-
-
-
-
-
