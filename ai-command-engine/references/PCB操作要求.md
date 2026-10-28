@@ -1,305 +1,226 @@
-# PCB Operating Requirements
+# PCB Operation Requirements
 
-This file maintains specific requirements for drawing, modifying, and checking results.
-The project supplies the confirmed scope, expected connections, and design conditions.
+This page covers PCB creation, modification, and result checks. The project defines confirmed scope, intended connections, and design conditions.
 
-Manage stage acceptance and project records as agreed for the project.
-For online commands and parameters, also read the relevant command reference selected from the skill entry point; use help for the currently installed version.
-For offline generation or another backend, apply only the relevant drawing and design requirements; do not use them to initiate online writes.
+Manage stage acceptance and project records according to the project plan. For online work, use the command pages linked from the skill entry and help for the installed version. For offline generation or another backend, apply only relevant board-design requirements; do not use them to initiate online writes.
 
-## Board Outline and Manufacturing Rules
+## Outline and Manufacturing Rules
 
-- Confirm the board outline, holes and slots, fixed interfaces, assembly side, and component heights first.
-- Determine interface position and orientation from the mechanical drawing, mating connector, and assembly method.
-- Check whether a fully inserted connector is blocked by the board edge, enclosure, or nearby components.
-- Leave room for cable bends, latches, and insertion/removal tools.
-- For board-to-board connectors, check the position, orientation, and height of the mating board.
-- Leave clearance around mounting holes for the actual screws, washers, and standoffs.
-- Check panel edges, fabrication rails, and placement space for the actual manufacturing method.
-- Lock only components with explicit, confirmed position requirements.
-- Set trace width, spacing, copper-to-edge, and hole rules for the actual process.
-- Distinguish drill size from finished-hole size.
-- Distinguish plated and non-plated holes, and requirements for plugged or filled vias.
-- Check which objects are actually affected by net, layer, and region rules.
-- Do not check only default rules.
-- Separately verify the basis for any insulation, creepage, or impedance requirements.
+- Confirm board outline, holes and slots, fixed interfaces, assembly side, and component height first.
+- Set connector positions and orientation from the mechanical drawing, mating plug, and assembly method. Check that a fully inserted plug is not blocked by the board edge, enclosure, or nearby parts. Leave room for cable bend, latch, and insertion/removal tools.
+- For board-to-board connectors, check the mating board's position, orientation, and height. Allow space around mounting holes for actual screws, washers, and standoffs.
+- Check breakaway edges, process rails, and assembly clearance for the actual production method. Lock only components with confirmed position requirements.
+- Set trace width, clearance, copper-to-edge, and hole rules for the actual process. Distinguish drill size from finished-hole size, plated from non-plated holes, and tenting, plugging, or filling requirements.
+- Check which objects are affected by net, layer, and region rules; do not check only defaults. Verify the basis separately for insulation, creepage, or impedance requirements.
 
 ## Stackup and Current Return
 
-- Specify the purpose, material, copper thickness, and dielectric thickness of every layer.
-- Record drawing copper thickness, copper thickness used for checks, and order copper thickness separately.
-- If they differ, state the difference and how it is being handled.
-- Mark unconfirmed order processes as pending confirmation.
-- Mark confirmed but not yet submitted process settings as proposed order parameters.
-- Changing check parameters does not change the drawing's stackup.
-- Correct copper-layer count does not prove that the physical stackup is correct.
-- Choose the stackup based on routing density, power delivery, and the board manufacturer's process.
-- A low signal transition count does not mean every high-to-low or low-to-high transition is slow.
-- For critical traces, identify the layer, reference plane, and return path.
-- Check whether vias, slots, and traces interrupt the reference plane.
-- A layer named GND does not prove that its copper plane is continuous.
-- Return current spreads across the copper plane; it does not flow only along a single line in a diagram.
+- Document each layer's purpose, material, copper thickness, and dielectric thickness.
+- Record drawing copper thickness, thickness used for checks, and ordered thickness separately. Record differences and their status. Mark unconfirmed order processes as pending and confirmed but unsubmitted processes as proposed order parameters.
+- Changing check parameters does not change the drawing stackup. The correct copper-layer count does not prove the physical stackup is correct.
+- Choose stackup based on routing density, power, and fabrication capability. Few signal transitions do not mean every logic transition is slow.
+- For critical signals, identify the layer, reference copper, and return path. Check whether holes, slots, and traces break the reference plane. A layer named GND does not prove its copper is continuous.
+- Return current spreads over the plane; it does not flow only along one line in a diagram.
 
-The following four-layer stackups can be compared; there is no universal best choice.
-S means signal, G means ground, and P means power.
+For a four-layer board, compare options against the actual design; there is no universal best stackup. S = signal, G = ground, P = power.
 
 | Top to bottom | Main checks |
 | --- | --- |
-| S / G / P / S | Is the power reference plane continuous for bottom-layer traces? How does return current flow when changing reference planes? |
-| S+P / G / G / S+P | Is the outer-layer power copper sufficient? How are the two ground layers connected? |
-| S / G / P+limited S / G | Which layer is the actual reference for inner-layer signals? Do traces fragment the power region? |
+| S / G / P / S | Is the power reference for bottom traces continuous? How does the return path work when changing reference? |
+| S+P / G / G / S+P | Is outer-layer power sufficient? How are the two ground layers connected? |
+| S / G / P+some S / G | Which plane actually references inner signals? Do traces fragment the power region? |
 
-- Check specific dielectric thicknesses and impedance even when the layer order is the same.
-- On a two-layer board, check whether the actual copper planes can provide a return path.
-- Do not judge a six-layer board as better based on layer count alone.
-- Do not claim impedance has passed without the actual manufacturing stackup.
-- Keep fast or sensitive signals from crossing gaps in their reference planes.
-- When a signal changes layers, check how its return current changes layers.
-- Place ground vias between ground reference planes as actually required.
-- Do not connect reference planes at different potentials with a ground via.
-- When changing from a ground reference to a power reference, check the AC return conditions or change the routing layer.
-- Do not blindly add capacitors for every signal that changes layers.
-- Differential pairs also carry common-direction current in both conductors; check their return path too.
-- Do not split a ground plane solely because the names AGND and DGND differ.
-- Do not damage isolation slots, antenna keep-outs, or special sensing structures to improve return current.
+- Even with the same layer order, check dielectric thickness and impedance. For two-layer boards, check whether the actual copper provides a return path. A six-layer board is not automatically better because it has more layers.
+- Do not call impedance passed without a real manufacturing stackup. Keep fast or sensitive signals away from reference-plane gaps. When a signal changes layers, check how return current changes layers too.
+- Use ground vias between same-ground reference planes as needed. Never connect reference planes at different potentials with a ground via.
+- When a signal changes from ground to power reference, check the AC return conditions or change the routing layer. Do not add capacitors to every layer-changing signal by default.
+- Differential signals also carry common-mode current when both conductors move together; check their return path. Do not split a plane merely because nets are named AGND and DGND. Do not damage isolation slots, antenna clearances, or special sensing structures to add a return path.
 
 ## Differential Signals
 
-- Use `knowledge.query` with `query: "USB"` to look up interface-related experience, then determine impedance, spacing, length matching, and reference planes from the applicable standard, component documentation, manufacturer stackup, and project constraints.
-- Treat knowledge-base values as preliminary planning guidance; do not use a value from one interface as a fixed rule for every differential pair.
-- After routing, check the differential-pair rules, spacing along both traces, length mismatch, reference-plane continuity, and layer-change locations.
+Use `knowledge.query` with `query: "USB"` to find interface guidance, then determine impedance, spacing, length matching, and reference planes from the actual standard, component documentation, fabricator stackup, and project constraints. Knowledge-base values are for initial planning only; do not treat a single interface's example as a fixed rule for all differential pairs.
 
-### Match Impedance Design Parameters to the Order
+After routing, check pair rules, spacing along both traces, length difference, reference-plane continuity, and layer-change locations.
 
-Choose a stackup that the board manufacturer can fabricate before calculating, or calculate from the actual parameters of an existing order. In either case, use the same selected parameters and compare the design and order item by item.
+### Match Impedance Design to the Order
 
-- Record the manufacturer, stackup name or code, source and lookup date, layer count, finished board thickness, material, and inner- and outer-layer copper thickness.
-- Record the impedance model, target value, signal layer, reference layer, differential gap or coplanar clearance to ground copper, and calculated trace width from the applicable official calculator. Record the actual source for dielectric thickness, Dk, solder mask, and other model parameters; do not guess defaults.
-- Distinguish proposed parameters, parameters used for calculation, and parameters confirmed in the order. Check the ordered structure, material, thickness, copper thickness, impedance testing, and tolerance. Recalculate if they differ; matching layer count alone is insufficient.
-- The physical stackup recorded in EDA does not prove that the same structure was selected for the order. An impedance estimate is not a manufacturing guarantee; automatic B4 parameter linkage has not been developed.
+Either select a fabricable stackup first and then calculate, or calculate from an existing order's actual parameters. Use the same selected parameters for design and order, and compare them item by item.
 
-Sources: [JLCPCB Impedance Calculator Guide](https://jlcpcb.com/help/article/user-guide-to-the-jlcpcb-impedance-calculator), [Standard Laminated Structures](https://jlcpcb.com/help/article/multi-layer-pcb-standard-laminated-structures), and [EDA Physical Stackup and Ordering](https://prodocs.lceda.cn/en/pcb/tools-layer-manager/).
+- Record fabricator, stackup name or code, source and lookup date, layer count, finished board thickness, material, and inner/outer copper thickness.
+- From the official calculator, record impedance model, target, signal and reference layers, differential gap or coplanar ground spacing, and calculated trace width. Record dielectric thickness, Dk, solder mask, and other model parameters from an actual source; do not fill them with guessed defaults.
+- Distinguish proposed parameters, parameters used in a calculation, and order-confirmed parameters. At ordering, compare construction, material, thickness, copper, impedance test, and tolerance. Recalculate if they differ; checking layer count alone is insufficient.
+- The physical stackup in EDA does not prove the order uses the same construction. An impedance estimate is not a manufacturing guarantee. Automatic parameter linking in the current B4 workflow has not been developed.
+
+Sources: [JLC impedance calculator guide](https://jlcpcb.com/help/article/user-guide-to-the-jlcpcb-impedance-calculator), [standard multilayer stackups](https://jlcpcb.com/help/article/multi-layer-pcb-standard-laminated-structures), and [EDA stackup and ordering](https://prodocs.lceda.cn/en/pcb/tools-layer-manager/).
 
 ## Checks After Copying a Multilayer Board
 
-- After copying a four-layer or other multilayer board, check the schematic association of the target board.
-- Check the actual copper-layer order, dielectric layers, and total board thickness.
-- Check that each layer's purpose and copper thickness meet the current design conditions.
-- If the original board must be retained, confirm that it is still present and unchanged.
+- After copying a four-layer or other multilayer board, verify the target board's schematic association.
+- Check target copper order, dielectric layers, total thickness, layer purpose, and copper thickness against the current design requirements.
+- If the original board must be preserved, confirm it still exists and its contents have not changed.
 
-## Unconnected Pads
+## Unnetted Pads
 
-- Check the pin number, purpose, and confirmed connection of every unconnected pad individually.
-- Distinguish an accidental omission, unused signal pin, function pin allowed to float, and mechanical pad.
-- A function pin allowed to float must be supported by documentation for the exact part number.
-- For mechanical pads, check whether grounding or another connection is needed for their actual use.
-- If a tool cannot determine a net, that does not mean the design is necessarily wrong.
-- Confirming a category does not mean the tool has fully checked that pad.
-- Record each warning's category, basis for the decision, and checks still incomplete.
-- Do not force a ground connection or change a net just to clear a warning.
+- Check each unnetted pad's pin number, purpose, and confirmed connection individually.
+- Distinguish missing connections, unused signal pins, functions allowed to float, and mechanical pads.
+- Require part-specific documentation before leaving a functional pin floating. Check mechanical pads for any required ground or other connection.
+- A tool's inability to determine a net does not prove the design is wrong. Classifying an alert does not prove the tool fully checked the pad. Record each alert's classification, basis, and unfinished checks.
+- Do not force a ground or change a net merely to clear an alert.
 
 ## Component Placement
 
 ### Placement Order
 
-1. Place fixed interfaces and mechanically constrained components first.
-2. Determine which functional areas should be adjacent based on power, control, sensing, and external interfaces.
-3. Place critical local circuits first, such as bypass, driver, bootstrap, feedback, and clock circuits.
-4. Leave room for main current paths, important signals, layer-change vias, and return paths.
-5. Adjust the main controller's position and orientation based on all used interfaces.
-6. Check one repeated channel before laying out the others.
-7. Check whether constrained pin escapes and shared channels can be routed.
-8. Adjust spacing, orientation, and alignment of ordinary components last.
+1. Place fixed connectors and mechanically constrained components first.
+2. Set the adjacency of power, control, sensing, and external-interface areas.
+3. Place critical local circuits such as bypass, driver, bootstrap, feedback, and clock components.
+4. Reserve space for major current paths, critical signals, layer-change vias, and return paths.
+5. Adjust MCU location and orientation based on all used interfaces.
+6. Check one repeated channel before laying out the rest.
+7. Check restricted pin exits and shared routing corridors.
+8. Adjust spacing, orientation, and alignment of ordinary parts last.
 
 ### Functional Areas and Supporting Components
 
-- Check critical ICs against the manufacturer's layout requirements for the exact part, package, and operating conditions.
-- Distinguish mandatory manufacturer requirements, recommendations, and choices adopted by this project.
-- Apply requirements to specific pads, traces, and return paths.
-- Do not copy example-board coordinates, fixed distances, grids, or rotation angles.
-- Define functional areas from actual connectivity, not only by designator prefix or component type.
-- Identify the pin, interface, or circuit served by each supporting component.
-- Place supporting components relative to the actual pins and return paths; do not line them up around the IC center.
-- First arrange adjacent positions and routing channels for functional areas that interconnect frequently.
-- When moving or rotating the main controller, check all used interfaces, supporting components, and effects on neighboring areas.
-- Airwire crossings, center-to-center distance, and total airwire length are only for screening candidate placements.
+- Check critical IC placement against manufacturer layout requirements for the specific part, footprint, and operating conditions. Distinguish mandatory requirements, recommendations, and choices adopted by this project.
+- Apply requirements to specific pads, traces, and return paths. Do not copy example-board coordinates, fixed distances, grid, or rotation angles.
+- Group by actual connectivity, not only designator prefix or component type. Identify which pin, interface, or loop each supporting part serves.
+- Place supporting parts relative to actual pins and return paths, not in a row around the IC center. Place frequently interconnected areas next to each other with a defined routing corridor.
+- When moving or rotating an MCU, check every used interface, supporting component, and neighboring area. Flyline crossings, center distance, and total flyline length are candidate-selection aids only.
 
-### Common Local Circuits
+Specific part requirements are maintained in `component-pcb-profiles`. Check the manufacturer's source for any unverified part requirements.
 
-Requirements for specific part numbers are maintained by `component-pcb-profiles`.
-For unverified part-specific requirements, first check the manufacturer's documentation for the exact part.
-
-| Object | Placement checks |
+| Circuit | Placement checks |
 | --- | --- |
-| Decoupling and power supply | Check the actual path formed by the relevant power pin, pad, via, and return; do not consider capacitor distance alone. |
-| Power conversion | Arrange paths for input, conversion, and output; check high-frequency loops, bootstrap, feedback, and thermal clearance. |
-| Drivers and power switches | Check driver and switching loops; prevent power paths from interfering with gate-drive and sensing paths. |
-| Crystal and clock | Place the crystal and load components around the clock pins; handle ground guard and routing underneath according to the specific guide. |
-| Communication interfaces | Place protection, termination, and branches according to their actual function and interface topology. |
-| Protection and freewheeling | Check the relative positions of the protection point, fault source, return, and protected path. |
-| Analog and sensing | Keep input, reference, and filter paths away from interference; place and orient sensors to suit the measurement purpose. |
-| Shunt and precision feedback | Place components according to actual sense points; check power drop and heat-source effects. |
+| Decoupling and power | Check the actual path among supply pin, pad, via, and return; distance to the capacitor alone is insufficient. |
+| Power conversion | Arrange input, conversion, and output paths; check high-frequency loops, bootstrap, feedback, and thermal space. |
+| Driver and power switch | Check driver and switching loops; keep power paths from interfering with gate and sensing paths. |
+| Crystal and clock | Place crystal and load parts around clock pins; follow the specific guide for guard ground and routing below. |
+| Communication interface | Place protection, termination, and branches according to their function and interface topology. |
+| Protection and freewheeling | Check the relationship among protection point, fault source, return, and protected path. |
+| Analog and sensing | Keep inputs, references, and filters away from interference; match sensor position and axis to the measurement goal. |
+| Shunt and precision feedback | Place parts at actual sense points; account for power drop and heat sources. |
+
+The current plugin cannot move PCB designators independently and has no command to place mounting holes or standalone pads. Make those changes manually in the EDA interface, then read them back.
 
 ### Thermal, Assembly, and Alignment
 
-- Check actual temperature conditions and allowed drift for components near heat sources.
-- Leave room for thermal copper, thermal vias, heat sinks, and actual airflow.
-- Do not break apart a power or driver loop that must remain compact just to distribute heat sources.
-- Check large components using their actual bodies and assembly space, not only pad bounding boxes.
-- On double-sided and multilayer boards, check obstacles on every affected layer, through-hole leads, and mating structures.
-- Check copper connections and heating differences at the two ends of small components for the actual soldering process.
-- When electrical and mechanical conditions allow, components of the same type may share an orientation and spacing.
-- Do not lengthen critical loops for neatness, or mark arbitrary angles and unequal spacing as errors by themselves.
-- Make polarity and pin 1 markings easy to assemble and inspect.
-- If mechanical, safety, electrical, and manufacturing requirements conflict, revise the design; do not exempt requirements using a fixed ranking.
+- Check operating temperature and allowed drift for parts near heat sources. Reserve space for thermal copper, vias, heatsinks, and actual airflow.
+- Do not split a compact power or driver loop just to spread heat.
+- Check large parts against their real bodies and assembly clearance, not just pad bounding boxes. For double-sided and multilayer boards, check all affected layers, through-hole leads, and mating structures.
+- Check copper connections and heating differences at both ends of small parts for the actual soldering process.
+- If electrical and mechanical conditions allow, align similar parts and spacing. Do not lengthen critical loops for neatness or flag arbitrary angles and spacing alone.
+- Make polarity and pin-1 marks visible for assembly and inspection.
+- When mechanical, safety, electrical, and manufacturing requirements conflict, revise the design; a fixed ranking does not waive a requirement.
 
 ### Repeated Channels and Copies
 
-- Define inputs, outputs, controls, supporting components, and return relationships in the template first.
-- For each instance, check pin numbers, polarity, nets, orientation, and local obstacles.
-- Check shared power and shared returns separately.
-- Channels may use different layouts when actual obstacles or operating conditions differ.
-- After reusing a via layout, check nets, obstacles, current capacity, and thermal conditions for every channel.
-- Passing the template does not replace checking every instance.
+- Define the template's input, output, control, supporting parts, and returns.
+- Check pin number, polarity, net, orientation, and local obstacles in every instance. Check shared power and returns separately.
+- Allow different placement for a channel when obstacles or operating conditions differ.
+- After reusing via layouts, check each channel's nets, obstacles, current capacity, and thermal conditions.
+- A passing template does not replace checks of all instances.
 
 ## Programming and Test Access
 
-- During placement, leave room for programming fixtures, probes, and desoldering tools.
-- Check whether pads remain accessible after assembly at the actual test stage.
-- Avoid connectors, heat sinks, shields, and enclosures that block probe access.
-- Set pad size, spacing, and contact surface for the probe or fixture being used.
-- Expose solder mask in probe contact areas and check the actual manufacturing output.
-- Bare probe pads normally do not need a solder-paste opening; set openings for wire soldering or other processes according to their purpose.
-- Clearly mark required pin order, signal, and orientation in silkscreen without covering contact areas.
-- Match the order and orientation of programming pads to the fixture, and consider reverse-connection protection.
-- Provide a suitable reference-ground contact near measurement points.
-- The reference ground must belong to the circuit under test; do not bridge separate isolation domains.
-- First assess the effect of test pads and stubs on high-speed, RF, crystal, and sensitive analog nodes.
-- Probe loading can change a signal, so consider the measurement method as well.
-- Place 0 Ω resistors where they can be easily fitted or removed, leaving space to measure both ends.
-- A connection that must be opened must not be bypassed by a copper plane or another branch.
-- A 0 Ω resistor in a power path and the traces at both ends must meet actual current requirements.
-- Check the actual pad net for every programming pad and test point.
+- Reserve space for programming fixtures, probes, and rework tools during placement. Check access to pads at the actual assembly/test stage.
+- Keep connectors, heatsinks, shields, and enclosures from blocking probe access. Size and space pads for the actual probe or fixture and contact surface.
+- Open the solder mask over probe pads and inspect the exported result. Bare probe pads usually do not need a paste opening; set soldered-wire or other processes for their actual purpose.
+- Mark necessary pin order, signal, and direction without covering the contact area. Match programming-pad order and orientation to the fixture and prevent reversed connection.
+- Provide a suitable reference-ground contact near measurement points. It must belong to the circuit under test; do not bridge isolated domains.
+- Assess loading from test pads and stubs on high-speed, RF, crystal, and sensitive analog nodes. Probe loading can alter the signal, so consider the measurement method too.
+- Put 0-ohm resistors where they are accessible and leave room to measure both ends. Ensure a connection meant to be opened cannot be bypassed by copper or another branch. Size the resistor and its traces on power paths for actual current.
+- Verify the actual pad nets for all programming pads and test points.
 
 ## Plan Routing Paths
 
-- Route critical loops and the hardest pin escapes first.
-- Before final routing, test-route groups or inspect the actual geometry for uncertain constrained escapes and shared channels.
-- Use actual pads, layers, trace widths, spacing, vias, and obstacles on all layers in the check.
-- Non-overlapping components do not prove that the placement can be fully routed.
-- A trial route applies only to the checked area; record predicted paths separately from completed routes.
-- A shared channel must fit the related group of traces at the same time; do not route traces one by one through the same space as if it were reusable.
-- Plan escapes at both ends, the main channel, branches, layer changes, and returns.
-- Reserve escapes for unrouted pins, power, and ground as well.
-- Do not change IC pin assignments or connector pin order just to make the layout look orderly.
-- For a simple straight channel, estimate width from the sum of trace widths, spacing, and clearance on both sides.
-- Calculate extra space for turns, branches, vias, and returns separately.
-- Do not impose a universal rule to route horizontally on the top layer or vertically on the bottom layer.
+- Route critical loops and the hardest pin exits first.
+- Before routing, trial-route or inspect real geometry for constrained exits and shared corridors. Use actual pads, layers, widths, clearances, vias, and obstacles on all layers.
+- No component overlap does not prove the board is routable. A trial covers only the checked scope; record predicted paths separately from completed routes.
+- Shared corridors must fit all related traces at once; do not count the same space repeatedly as each individual trace passes.
+- Plan exits from both ends, main corridors, branches, layer changes, and returns. Reserve exits for unrouted pins, power, and ground too.
+- Do not change IC pin assignment or connector pin order solely to make routing look orderly.
+- For a simple straight corridor, estimate width from trace widths, clearances, and side margins. Calculate additional space separately for bends, branches, vias, and returns.
+- Do not require horizontal routing on the top layer or vertical routing on the bottom layer.
 
 ## Power, Signals, and Sensing
 
-- Check the current path segment by segment from the power source to the load and then to the return.
-- Check components, connectors, pads, narrow copper, via groups, and copper planes.
-- Check current, voltage drop, power loss, and temperature rise under operating conditions.
-- Identify rapidly changing current loops for each switching state.
-- Handle switch nodes, gates, and bootstrap loops according to the IC requirements.
-- A large copper area does not replace checking the current loop.
-- Check communication traces for the device, edge rate, load, protocol, and cable.
-- Determine differential impedance and timing requirements from the actual interface and stackup.
-- Measure actual paths from the source to each receiver.
-- Total copper length for a net cannot replace endpoint path length or timing skew.
-- For connectors with multiple pins on the same net, check every pin that must be connected.
-- Check bidirectional buses for their actual drive states.
-- Choose branch topology based on the interface and load.
-- Ordinary control and PWM traces do not need serpentine length tuning when no equal-length requirement exists.
-- Route positive and negative sense inputs from their actual sense points.
-- Do not include a power-drop segment that must not be shared in the sense path.
+- Trace each current path from supply to load and back. Check components, connectors, pads, narrow copper, via groups, and planes.
+- Check current, voltage drop, loss, and temperature rise under actual operating conditions. Identify loops with rapidly changing current by switching state.
+- Follow IC requirements for switch nodes, gates, and bootstrap loops. A large copper area does not replace path analysis.
+- Evaluate communication traces against transceiver, edge rate, load, protocol, and cable. Determine differential impedance and timing from the actual interface and stackup.
+- Measure paths from source to each receiver. Total net copper length does not replace endpoint path or timing-skew checks.
+- Check every required pin on multi-pin same-net connectors. Check bidirectional buses for their actual driver states and choose branch topology for the interface and load.
+- Do not add serpentine length to ordinary control or PWM traces when there is no length-matching requirement.
+- Route sense positive and negative from the actual sense locations. Do not include a power-drop segment that must not be shared in a sense path.
 
 ## Record High-Current Paths by Segment
 
-- Record connectors, wires or copper planes, component pads, layer-change via groups, and return paths in actual connection order.
-- State continuous current, peak current, and the duration of each peak for every segment.
-- Record the narrowest point, actual dimensions, and copper thickness for every segment.
-- For via groups, also record drill diameter, via count, barrel plating thickness, and connection method.
-- Distinguish drill size from finished-hole size.
-- Mark missing parameters as pending confirmation; do not fill them with tool defaults.
-- Record the basis for checking current capacity, voltage drop, and temperature rise for each segment, along with items still to verify.
-- Outer-layer copper thickness cannot substitute for via-barrel plating thickness.
-- Via count cannot substitute for checking current capacity and temperature rise of the via group.
-- A large copper area and a clean DRC alone do not prove current capacity.
-- Thermal-via requirements for specific components are maintained by `component-pcb-profiles`.
+- Record each connector, trace or plane, component pad, via group, and return path in connection order.
+- For every segment, state continuous current, peak current, and the duration of each.
+- Record the narrowest location, actual dimensions, and copper thickness for each segment.
+- For via groups, record drill diameter, via count, plated barrel thickness, and connection method. Distinguish drill diameter from finished-hole diameter.
+- Mark missing parameters pending; do not fill them with tool defaults.
+- Record the basis and pending checks for ampacity, voltage drop, and temperature rise per segment.
+- Outer-layer copper thickness does not specify via barrel plating. Via count alone does not prove via-group current capacity or temperature rise.
+- A large copper pour or zero DRC errors alone does not prove current capacity. Part-specific thermal-via guidance is maintained in `component-pcb-profiles`.
 
 ## Vias and Copper Pours
 
-- Check signal vias, ground vias, current-carrying vias, and thermal vias separately.
-- In the v0.20.58 installed-version example that routed tracks before placing vias, the two target connections still reported `ConnectionError` immediately and later; no rebuild was run. The errors disappeared after saving, closing, and reopening the combined operation, but the cause cannot be attributed to any one step. Official issue 31 points to refresh timing, but the root cause is unconfirmed. `placeVia` reads back the via and requests one airwire calculation, but `connectivityVerified:false` does not prove cross-layer connectivity. It has not been tested whether placing vias first avoids the issue. Run a connectivity check after refresh to confirm the actual result.
-- Finish required fanout before creating or rebuilding copper pours. For multiple nets, generate and execute each fanout plan separately, then reread obstacles and available paths after each execution.
-- Preserve necessary return and thermal paths when reducing layer changes.
-- Do not estimate parallel-via capacity by simply multiplying by via count.
-- Via-in-pad requires support from the footprint and selected manufacturing process.
-- Check the net, layer, boundary, clearance, and connection method of copper pours.
-- Check priority, island handling, and manufacturing optimization settings.
-- Thermal-pad connections must consider current, heat dissipation, and soldering.
-- Rebuild copper pours after changing related geometry.
-- Confirm that automatic rebuild settings are effective.
-- Check that the generated copper is actually continuous.
+- Check signal, ground, current-carrying, and thermal vias separately.
+- `placeVia` reads the via back and requests flyline recalculation. `connectivityVerified:false` means cross-layer connectivity is not yet confirmed. Refresh and use connectivity checks to verify the actual state.
+- Complete required fanout before creating or rebuilding copper pours. Generate and execute fanout plans for different nets one at a time; after execution, reload obstacles and available paths.
+- Preserve required return and thermal paths while minimizing layer changes. Do not estimate parallel-via capacity by simply multiplying by via count. Via-in-pad requires support from the footprint and selected fabrication process.
+- For pours, check net, layer, boundary, clearance, and connection style. Check priorities, island removal, and manufacturing options. Balance thermal relief connections for current, heat dissipation, and soldering.
+- Rebuild copper after changing related geometry. Confirm automatic rebuild settings work and check that the generated copper is continuous.
 
 ## Rerouting and Comparison
 
-- First state which components may move, which traces may change, and which connections must remain.
-- For a single escape issue, start with a local adjustment.
-- If a shared channel is the problem, inspect the related functional group together.
-- If a route repeatedly goes around the same obstacle, first check whether placement is the cause.
-- After deletion or shove routing, check segmentation, clipping, adjacent traces, and endpoints outside the area.
-- Compare alternatives using the same endpoints, operating conditions, and scope.
-- Record path, layer changes, returns, and neighboring-area costs for all affected interfaces.
-- Failure to find a better route does not prove that the current layer change is necessary.
-- A shorter route or fewer vias cannot offset electrical, mechanical, or manufacturing problems.
+- State which components may move, which traces may change, and which connections must remain.
+- For one pin-exit problem, adjust locally first. If a shared corridor is constrained, check the whole related functional group.
+- If routing repeatedly detours around the same obstacle, inspect the placement cause first.
+- After deletion or shove routing, inspect segments, clipping, neighboring traces, and endpoints outside the edited area.
+- Compare alternatives with identical endpoints, operating conditions, and scope. Record route, layer changes, returns, and neighboring impacts for all affected interfaces.
+- Failing to find a better route does not prove a layer change is necessary. Shorter routing or fewer vias do not offset electrical, mechanical, or manufacturing problems.
 
-## Compare Before and After Changes
+## Before-and-After Comparison
 
-Follow [PCB workflow](commands-pcb.md) for modifications, deletions, and save/readback. Compare nets and geometric positions before and after; retain unexplained differences.
-- After merging same-net traces, check endpoints, path, layer, and width.
-- If copper-fill primitive IDs change, separately check the boundary, fill geometry, and connections.
-- Report generated-ID changes separately from actual copper changes.
+Follow the [PCB command workflow](commands-pcb.md) for modification, deletion, and saved readback. Compare nets and geometry, and retain unexplained differences for review.
 
-## Silkscreen and Interface Labels
+- After same-net traces merge, check endpoints, route, layer, and width.
+- When a generated copper ID changes, separately check the boundary, filled geometry, and connectivity.
+- Report ID-only changes separately from actual copper changes.
 
-- Check standalone text, component designators, and markings within footprints separately.
+## Silkscreen and Interface Markings
+
+- Inspect standalone text, component designators, and markings inside footprints separately.
 - Check text height, stroke width, and minimum spacing for the actual process.
-- After enlarging text, recheck its spacing from pads, solder-mask openings, board edges, and nearby text.
-- Check the orientation and pin order of bottom-side text in the actual bottom view.
-- For inverse text, check the background area and that all characters are complete.
-- If the tool cannot change component attributes, list the objects that remain unfinished.
-- Passing dimension checks does not replace checking the actual board view.
+- After enlarging text, recheck its clearance from pads, solder-mask openings, board edge, and adjacent text.
+- Check bottom-side text orientation and pin order in the actual bottom-side view. For reverse text, check the background area and complete characters.
+- If the tool cannot change a component property, list the unfinished objects. Passing a dimension check does not replace visual review.
 
 ## Completion Checks
 
-- Check connectivity, designators, footprints, polarity, and all repeated channels.
-- Check critical loops, sensing, and return paths.
-- Check manufacturing spacing, holes, solder mask, silkscreen, and board edges.
-- Check component bodies, height, insertion/removal, and assembly clearance.
-- Check test access, pin order, openings, and tool access.
-- Run a complete design rule check (DRC) before determining the final version.
-- Real-time DRC and custom DRC must not be represented as a complete check.
-- Clearing an error marker does not mean the issue was repaired.
-- Before a height check, confirm that rules, models, and height attributes are valid.
-- Inspect the actual objects behind estimated warnings; do not ignore all warnings or treat them all as errors.
-- After changes, recheck affected areas and record the saved version and remaining issues.
+- Check connectivity, designators, footprints, polarity, and every repeated channel.
+- Check critical loops, sensing, and return current.
+- Check manufacturing clearances, holes, solder mask, silkscreen, and board edge.
+- Check component bodies and height, insertion/removal, and assembly clearance.
+- Check test access, pin order, mask openings, and rework clearance.
+- Before identifying a final revision, run the complete DRC. Real-time and custom DRC must not be presented as a complete check.
+- Clearing an error marker does not mean the problem is fixed. Before height checks, verify rules, models, and height attributes are valid.
+- Inspect estimated warnings against their actual objects; do not ignore or reject all warnings by default.
+- Recheck affected areas after edits and record the saved revision and remaining issues.
 
 ## Run DFM After DRC
 
-After a complete DRC passes, run PCB DFM and applicable SMT manufacturing/assembly checks for the process intended for this order.
-Select the DFM command reference directly from the skill entry point and confirm the current version, parameters, and coverage limitations.
+After complete DRC passes, run PCB DFM and applicable SMT manufacturing/assembly checks for the intended order process. Use the DFM command reference linked from the skill entry and check the installed version, parameters, and coverage limits.
 
-- Confirm the target PCB, saved version, material, board thickness, copper thickness, stackup, and assembly process.
-- Compare the drawing, check inputs, and proposed order process; record differences and how they were handled.
-- Check response completeness, individual results, and coverage; API success alone is insufficient.
-- Use an appropriate method to check required items that the tool skips, does not support, or approximates, and retain the basis for the additional check.
-- Do not substitute a tool-supported default process for an unsupported process to obtain a pass.
-- After repairs, rerun the checks; retain complete DRC and applicable DFM results for the final submitted version.
-- If a check requires manufacturer parsing, first export the check file and upload it under existing authorization.
-- Do not submit the order until parsing passes.
+- Verify target PCB, saved revision, material, board thickness, copper thickness, stackup, and assembly process.
+- Compare the drawing, check inputs, and intended order process; record differences and their resolution.
+- Check report completeness, item-level results, and coverage; API success alone is insufficient.
+- Use an applicable method to check required items that were skipped, unsupported, or approximated, and keep the basis.
+- Do not replace an unsupported process with a supported default just to obtain a pass.
+- After fixes, rerun checks. Keep complete DRC and applicable DFM results for the final submission revision.
+- If manufacturer parsing is required, export check files and upload under existing authorization. Do not submit the order until parsing passes.
 
-Report the version, process inputs, individual results, basis for supplementary checks, and unresolved items for project-stage acceptance.
-Passing within the tool's coverage does not mean all manufacturing requirements have passed.
+Report the result revision, input process, item-level outcomes, supplemental-check basis, and unresolved issues for project-stage acceptance. Passing within the tool's coverage does not mean all manufacturing requirements pass.

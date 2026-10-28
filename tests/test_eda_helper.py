@@ -9,7 +9,7 @@ import unittest
 from unittest.mock import patch
 
 
-SCRIPT = Path(__file__).resolve().parents[1] / 'scripts' / 'eda.py'
+SCRIPT = Path(__file__).resolve().parents[1] / 'ai-command-engine' / 'scripts' / 'eda.py'
 SPEC = importlib.util.spec_from_file_location('eda_helper', SCRIPT)
 eda = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(eda)

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.10.28.2
+
+- Replaced the long entry point with concise setup, execution rules, and direct task navigation.
+- Synced English and Chinese task references with the cleaned Chinese instructions.
+- Removed obsolete version diaries and development records from the installable skill; helper tests and release history stay outside the package.
+- No plugin runtime, extension package, or plugin version change.
+
 ## 2026.10.28.1
 
 - Versioned the standalone skill package as `v2026.10.28.1`, independently of plugin version `v0.20.124`.
