@@ -2,6 +2,16 @@
 
 写入前先读[原理图操作要求](原理图操作要求.md)，并按[连接与环境](setup.md)确认目标窗口、工程和活动图页。指令参数和返回以该窗口 `/help?cmd=<命令名>` 为准；`/help` 不按请求中的 `instanceId` 路由。先用 `schematic.getPageInfo`、`listComponents`、`listPins` 读取图页、器件和实际引脚。
 
+## 功能区先行
+
+新绘功能区先调用 `schematic.placeRegion` 画框和标题，或复用 `buildBlock` 已创建的框；不要重复画框。用 `listRects` 核对框的 `span`，并核对标题和实际图像；只返回框 ID 不代表标题成功。
+
+`placeRegion` 的 `x,y` 是框左上角及上沿，`buildBlock.region` 的 `x,y` 是左下角；两者均按 +Y 向上计算，不能照搬同一个 Y。尺寸按器件、引脚出线和文字实际占用调整。
+
+`buildBlock` 是初放与接线宏，不保证符合布局和直连要求。默认电源网及多引脚网会逐脚放标签；显式 `style:"wire"` 也仅在实际解析为两个引脚时直连。需要区内多脚就近直连时，可用 `nets:[]` 只完成框和器件初放，读回 `refMap`、实际引脚并调整位置后，再用连接命令逐区接线。尚未接线时不能报告功能区完成。
+
+`schematic.linkWire` 不设置网名。需明确命名的直连，按当前帮助用带网络名的 `drawWire` 或在已有导线上设置名称并读回；不能把电气已连通等同于具备预期网名。
+
 ## 放置和连接
 
 - `schematic.placeDevice` 放置单件，必需参数及坐标以窗口帮助为准。可用 `lcscId` 与 `libraryUuid` 限定库；省略库沿用 SDK 查询范围。返回的 `device` 标识实际器件和库；`placementVerified` 只表示实例读回，`footprintVerified`、`footprintStatus`、`pcbReady` 和 `pcbReadyScope` 分别说明封装及引脚/焊盘映射核对范围。无封装符号仍可能放置并带警告。创建后核验异常时先查现场，不重放。用 `schematic.getPlacementResourcesDiagnostic` 只读检查现有实例。
@@ -21,6 +31,14 @@
 - `schematic.moveComponent` 不会移动旧导线。`schematic.autoLayout` 只用于整理已有功能区；先限定目标并运行 `dryRun`，真实运行前保存。`rewire` 会删除并重建相关线；检查跳过线和部分移动。失败时核对 `error.cause.moved` 与现场，不假定回滚。
 - `schematic.delete` 前核对目标 ID 与依附关系，删除后重新扫描。长任务用 `task.get` 查询；超时不代表取消。任何写入结果未知时停止后续写入。确认持久性需保存、关闭、重开，再核对身份、属性、网络和非目标内容。
 - 删除 TEXT 使用正式删除接口并核对源码和模型；当前已知即时删除后保存重开可能以原 ID 复活。`directDeleted` 不代表持久删除。返回未知或读回不完整时停止，不改用整页源码写回，不重试或补偿写入；help 标明持久性限制，不据此禁用全部删除路径。
+
+## 逐区检查后再完成
+
+按[原理图完成检查](原理图操作要求.md#原理图完成检查)执行统一验收表、保存重开范围和结果格式，不自行省略或另设一套通过标准。
+
+每区接线后读取 `listComponents`、`listPins`、`listWires` 和 `listNetLabels` 核对本区内容；用 `exportPng` 或当前界面查看局部，整页缩略图不代替放大检查。确认分区框、标题、短连线、标签和文字避让后，再继续下一区；接口连接随相邻区完成后统一核对。
+
+`structuralAudit` 可筛查异网桥接、框重叠、出区和碰撞候选，但不保证检测漏画的分区或全部视觉问题。零项 DRC 或审计通过不能代替逐脚网表比较和图面检查。因工具缺失而不能检查时列明未完成项，不能自行跳过后报告全部完成。
 
 ## 检查、网表和导出
 

@@ -1,6 +1,24 @@
 # Schematic Commands
 
-Before writing, read [schematic operating requirements](原理图操作要求.md) and confirm the target window, project, and active page using [connection and setup](setup.md). Use `/help?cmd=<command>` in that window for parameters and returns; `/help` is not routed by the request `instanceId`. First read the page, components, and actual pins using `schematic.getPageInfo`, `listComponents`, and `listPins`.
+Before the first schematic write, read [schematic operating requirements](原理图操作要求.md) and this workflow in full. Confirm the target window, project, and active page using [connection and setup](setup.md). Use `/help?cmd=<command>` in that window for parameters and returns; `/help` is not routed by the request `instanceId`. First read the page, components, and actual pins using `schematic.getPageInfo`, `listComponents`, and `listPins`.
+
+## Required order
+
+Follow this order for a new drawing or the scope of the current edit: read the target and list areas/components/pin nets/allowed NC → draw each new functional-area box and title → place components, then read actual designators, pin endpoints, and orientations → arrange parts, branches, and text → connect one area at a time → inspect each area → compare the connection table, run ERC/DRC, inspect the page, and save. Reuse correct existing content and stay within the authorized scope.
+
+Each new functional area needs a real box and readable title. A planned name or a box ID alone does not prove that the box and title were drawn correctly. After each area, read back components, pins, wires, and labels, then inspect its latest enlarged image before continuing. Nearby same-net pins in an area must be directly connected when appropriate, including GND; do not substitute one label per pin for convenience.
+
+Use the unified [Schematic Completion Checks](原理图操作要求.md#schematic-completion-checks), including its seven acceptance items, pass conditions, save/reopen scope, and four-column result format. Do not omit items or create different pass criteria. Report visual layout and electrical connectivity separately.
+
+## Functional areas first
+
+For a new area, use `schematic.placeRegion` to draw its box and title, or reuse a box already created by `buildBlock`; do not draw a duplicate. Use `listRects` to check its `span`, and verify the title and actual image. Returning a box ID alone does not confirm the title was created.
+
+`placeRegion` uses `x,y` for the upper-left corner and top edge of the box. `buildBlock.region` uses `x,y` for the lower-left corner. Both calculate with +Y upward, so do not reuse the same Y value without conversion. Adjust dimensions for actual components, pin leads, and text.
+
+`buildBlock` is an initial placement and wiring macro; it does not guarantee the required layout or direct connections. Default power and multi-pin nets use a label on each pin. Explicit `style:"wire"` also connects directly only when the input resolves to exactly two pins. To directly connect nearby pins within an area, use `nets:[]` to create only the box and initial component placement, read back `refMap` and actual pins, arrange components, then wire one area at a time. An unwired area is not complete.
+
+`schematic.linkWire` does not assign a net name. For a direct wire that needs an explicit name, use `drawWire` with a net name as supported by current help, or set the name on an existing wire and read it back. Electrical continuity alone does not prove the intended net name.
 
 ## Place and connect
 
@@ -21,6 +39,12 @@ Before writing, read [schematic operating requirements](原理图操作要求.md
 - `schematic.moveComponent` does not move existing wires. Use `schematic.autoLayout` only to arrange an existing functional area: constrain the target, run `dryRun`, and save before execution. `rewire` deletes and recreates related wires; inspect skipped wires and partial moves. On failure, check `error.cause.moved` and current state; do not assume rollback.
 - Before `schematic.delete`, verify target ID and dependencies, then rescan. Use `task.get` for long tasks; timeout does not mean cancellation. If any write outcome is unknown, stop dependent writes. To confirm persistence, save, close, reopen, then check identity, properties, nets, and non-target content.
 - Delete TEXT through the supported delete API and check source and model. Immediate deletion may be undone after save/reopen on the current host; `directDeleted` does not confirm persistent deletion. If the result is unknown or readback is incomplete, stop. Do not switch to whole-page source writeback, retry, or compensate. Help documents this persistence limit; it does not disable every delete path.
+
+## Check each area before completion
+
+Follow the unified [Schematic Completion Checks](原理图操作要求.md#schematic-completion-checks), including the seven acceptance items, save/reopen scope, and result table. After wiring each area, read `listComponents`, `listPins`, `listWires`, and `listNetLabels`; use `exportPng` or the current interface to inspect an enlarged view. A full-page thumbnail does not replace close inspection. Confirm its box, title, short connections, labels, and text clearances before moving on. Check interface connections with the adjacent area.
+
+`structuralAudit` can screen for cross-net bridges, overlapping boxes, out-of-area objects, and collision candidates. It cannot confirm that no functional area was omitted or that all visual issues are acceptable. Zero DRC findings or a passing audit does not replace pin-by-pin netlist comparison and drawing inspection. List unavailable checks as incomplete instead of skipping them and reporting full completion.
 
 ## Checks, netlists, and export
 

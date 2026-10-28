@@ -4,6 +4,42 @@ This page covers PCB creation, modification, and result checks. The project defi
 
 Manage stage acceptance and project records according to the project plan. For online work, use the command pages linked from the skill entry and help for the installed version. For offline generation or another backend, apply only relevant board-design requirements; do not use them to initiate online writes.
 
+Before the first PCB write, read this page and the [PCB command workflow](commands-pcb.md) in full. Apply the required sequence below to the current scope.
+
+## Required Operation Order
+
+First identify whether this task covers placement, a local change, whole-board routing, or manufacturing delivery. Work only on this round and affected objects; reuse accepted work. Do not guess missing process, mechanical, or electrical parameters.
+
+1. Read the current project, PCB, schematic association, components, actual pads, and nets. The user initiates schematic-to-PCB updates in EDA. After an update, read it back and use the [optional tools](#pcb-optional-tools) rules to ask whether grouping is wanted.
+2. Check outline, holes and slots, fixed interfaces, keepouts, layers, applicable physical stackup, and actual net/layer/region rules. State what may move or be rerouted and what must remain.
+3. Place fixed interfaces, critical local circuits, the controller, and ordinary components in that order, using actual connectivity, pads, and return paths. Group only if selected.
+4. Before routing, check actual pad exits, shared corridors, vias, and space on all affected layers. Trial-route or inspect real geometry where constrained. Resolve conflicts through related placement or path changes; autorouter success cannot hide placement problems.
+5. Route critical loops and constrained traces first, then ordinary traces and every required power/ground pad. For selected fanout, differential, length-tuning, or autorouting tools, read back and verify actual paths and connectivity.
+6. After required fanout and rerouting, rebuild copper. Check actual fill, islands, and return continuity; then arrange silkscreen and interface markings. If related copper or nets change later, recheck affected pours and connectivity.
+7. Check nets, critical loops, mechanical assembly, and board appearance. Run complete DRC on a final whole-board revision. For manufacturing delivery, run applicable DFM/SMT checks and verify output files against the actual process.
+8. Complete the [completion checks](#pcb-completion-checks), saving and reopening at the applicable scope. Report scope, basis, and missing items. A placement-only or local task must not be called a fully routed board or production-ready.
+
+Local placement and routing may be iterated. Resolve prerequisites before dependent work; do not restart unrelated stages or require step-by-step confirmation.
+
+<a id="pcb-optional-tools"></a>
+## Optional Tools and When to Offer Them
+
+Grouping, autorouting, and the automatic arrangement or optimization tools below are optional methods, not mandatory steps for every board. When conditions are met and the user has not already chosen, proactively explain the use and impact and ask. Related choices may be asked together. Reuse an explicit choice without asking again.
+
+| Optional tool | When to offer | What to do if selected |
+| --- | --- | --- |
+| Component grouping | After schematic import/update to PCB has been read back and components and their sources are verifiable; ask whether to group by schematic functional area. | Preview `groupBySchematicRegions` scope and placement, then execute and read back. If not wanted, continue normal placement. Clarify which fixed components and existing routes must be preserved. |
+| Autorouting | When routing is in scope, placement/rules/constrained corridors are checked, and DSN/layer mapping plus online service or external CLI are available. | Online: export DSN, start and query task, retrieve SES, explicitly import, then accept. External CLI: export DSN, run the selected CLI, explicitly import SES. If not selected, use the authorized ordinary routing method. |
+| Dense-pin fanout | When dense pads or layer exits need fanout and actual pads, nets, widths, vias, and obstacles are known. | Prepare a plan, verify executable scope, execute and inspect. Not selecting a macro does not waive required escapes or connections. |
+| Differential routing / length tuning | When differential or timing requirements are confirmed, nets, reference plane, target, and tolerance are clear, and the geometry tool is useful. | Plan and execute within supported scope. Do not add length to ordinary control traces without cause. Not selecting a tool does not waive confirmed differential or timing requirements. |
+| Automatic copper / pad expansion | When local current-carrying or connection needs are explicit and target pad, net, layer, and dimensions can be verified. | Explain which copper geometry will change; plan, execute, and read back. Do not expand unrelated pads. |
+| Net-label silkscreen | When nets are verified, additional net labels are needed, and silkscreen space is inspectable. | Explain label scope and impact; preview, generate, then check openings, board edge, and readability. |
+
+- If the user does not reply, do not execute an optional tool; continue reads and checks that do not depend on that choice. If prerequisites are missing, state them; a proposal is not authorization.
+- If the user says no, continue the ordinary workflow without adding that tool merely to pass acceptance. Offer again only if conditions or scope materially change, explaining why.
+- Ordinary readback, necessary operations already authorized for this task (including required routing or copper rebuild), and acceptance are part of the workflow; do not turn each into a separate approval prompt.
+- Confirmed electrical, mechanical, and manufacturing requirements still apply. The tool or organizing method is optional; compliance with the design requirements is not.
+
 ## Outline and Manufacturing Rules
 
 - Confirm board outline, holes and slots, fixed interfaces, assembly side, and component height first.
@@ -101,7 +137,7 @@ Specific part requirements are maintained in `component-pcb-profiles`. Check the
 | Analog and sensing | Keep inputs, references, and filters away from interference; match sensor position and axis to the measurement goal. |
 | Shunt and precision feedback | Place parts at actual sense points; account for power drop and heat sources. |
 
-The current plugin cannot move PCB designators independently and has no command to place mounting holes or standalone pads. Make those changes manually in the EDA interface, then read them back.
+Use `pcb.modifyComponentAttribute` for designator position, angle, font, or visibility while preserving its text. Use `pcb.placeHole` and `pcb.placePad` for mounting holes and standalone pads respectively. Check hole type, plating, copper, and solder mask against current help, then read back geometry and nets. Do not substitute a standard via for an NPTH mounting hole.
 
 ### Thermal, Assembly, and Alignment
 
@@ -199,17 +235,43 @@ Follow the [PCB command workflow](commands-pcb.md) for modification, deletion, a
 - Check bottom-side text orientation and pin order in the actual bottom-side view. For reverse text, check the background area and complete characters.
 - If the tool cannot change a component property, list the unfinished objects. Passing a dimension check does not replace visual review.
 
+<a id="pcb-completion-checks"></a>
 ## Completion Checks
 
-- Check connectivity, designators, footprints, polarity, and every repeated channel.
-- Check critical loops, sensing, and return current.
-- Check manufacturing clearances, holes, solder mask, silkscreen, and board edge.
-- Check component bodies and height, insertion/removal, and assembly clearance.
-- Check test access, pin order, mask openings, and rework clearance.
-- Before identifying a final revision, run the complete DRC. Real-time and custom DRC must not be presented as a complete check.
-- Clearing an error marker does not mean the problem is fixed. Before height checks, verify rules, models, and height attributes are valid.
-- Inspect estimated warnings against their actual objects; do not ignore or reject all warnings by default.
-- Recheck affected areas after edits and record the saved revision and remaining issues.
+First state PCB, sheet/board number, objects in scope, and acceptance stage. A local task checks only its target and affected interfaces. Use confirmed schematic connectivity, mechanical conditions, critical-net requirements, and manufacturing process.
+
+### Acceptance Items, Methods, and Pass Conditions
+
+| Item | How to check | Pass condition |
+| --- | --- | --- |
+| Design correspondence and nets | Read back with `listComponents`, `getComponentPads`, `listNets`, and applicable netlist/net primitives; compare components, footprints, pin order, and all required pads. Check every repeated channel. | No missing parts, wrong footprints/polarity, or unintended net changes. Unnetted pads are classified by purpose; do not force-ground them to clear warnings. |
+| Outline, holes/slots, and mechanics | Compare mechanical drawings with outline, holes/slots, component locations/body outlines; inspect top/bottom and applicable 3D/assembly data for height, insertion, mounting, and probe access. | Dimensions, location, and orientation meet confirmed conditions with no body or assembly interference. Pad non-overlap alone is insufficient; report missing required evidence. |
+| Stackup and rules | Read available layers, rules, and physical stackup; compare signal/reference layers, copper/dielectric thickness, and net/layer/region rules. Where unsupported, inspect applicable sources or EDA UI. | Design conditions and affected objects are clear. Layer count/name does not prove physical stackup; unknown values are not replaced with defaults. |
+| Placement and routability | Use actual pads, `checkPlacement`, and current local geometry for functional groups, critical support parts, and exits. Check constrained corridors for the whole trace group, widths, clearances, vias, and all-layer obstacles. | Required local circuits and return paths are reasonably placed with feasible space for affected trace groups. Recheck collision candidates; skipped objects or pad-box approximations are not a complete pass. |
+| Traces, vias, and connectivity | Use `listLines`, `listVias`, `getNetInfo`, `getNetPrimitives`, and applicable DRC to check actual endpoints, net, layer, width, copper/drill, and pad contact; zoom into critical joints. | In-scope connections match intent; whole-board routing has no unresolved required disconnections. Flyline refresh, nonempty IDs, segment counts, or completed autorouter service do not prove connectivity. |
+| Critical electrical paths | Check power paths, sensing, reference plane, returns, layer changes, differential pairs, and length against project/manufacturer requirements; use actual geometry and selected parameters. | Required ampacity/drop/temperature, impedance/timing, and return conditions meet their stated basis. Mark not-applicable items; supplement tool gaps; missing data cannot pass. |
+| Copper and silkscreen | Use `listPours`, `getPourFillReadback`, `checkSilkscreen`, and current top/bottom views to inspect actual copper, openings, designators, polarity, edge, and pin order. | Required copper is filled with correct connectivity/continuity and silkscreen is readable. Boundary-only, `no-fill`, source candidates, or `complete:false` do not prove completion. |
+| DRC and manufacturing | Run `runDrcDetailed` with complete coverage on the final whole-board revision. For manufacturing delivery, use applicable `runDfm`, `runSmtDfm`, and `checkManufacturingProfile`; check manufacturing files and order conditions. | No unresolved errors; remaining warnings are handled per confirmed project decisions. Unsupported, skipped, approximate, and unknown items are checked separately or listed incomplete; do not mask issues by changing rules/default process. |
+| Board view and persistence | Inspect updated top/bottom, critical regions, and applicable layers; verify object and current PCB state. Apply the save/reopen scope below and compare target and non-target content. | View and persisted state match checked scope. Old screenshots, local DRC, or command success alone do not prove whole-board acceptance. |
+
+Report placement, routing, electrical, mechanical, and manufacturing separately. For local work, mark unperformed whole-board/production checks out of scope, not passed. If required evidence for manufacturing is missing, list it incomplete. Realtime/custom DRC is not a complete check; clearing a marker is not a repair.
+
+### Save and Reopen Scope
+
+- New whole-board work or formal whole-board delivery: after writes and save confirmation, close and reopen the affected PCB. Verify identity, component attributes, pad nets, traces/vias, rules, actual pours, and current view against the pre-close state.
+- Ordinary local changes (position, angle, silkscreen, attributes, added traces, or routine repour): compare the target, affected connections, and non-target content, then save. Do not require reopening the entire project each time.
+- If this delivery deletes/replaces components or existing routes, changes nets or stackup, copies a PCB, or explicitly requires persistence verification: save, reopen the affected PCB, and check the relevant content; do not compare only primitive IDs/counts.
+- If not reopened, report “saved; reopen not verified.” Report “save and reopen verified” only after readback. If write/save status is unknown, first investigate the original operation; do not force-close, replay, or mask uncertainty with another save.
+
+### Acceptance Result Format
+
+State the PCB, board number/revision, scope, and stage (placement/routing/manufacturing). Report each applicable item as a row; specify functional group/scope and avoid pasting raw responses.
+
+| Item and scope | Result | Check basis | Unresolved or incomplete items |
+| --- | --- | --- | --- |
+| Functional group/net/object and acceptance item | Pass / Fail / Incomplete / N/A | Current-object readback, path/rule comparison, inspected image, or DFM result. | Specific issue, missing check, and reason; write “None” when empty and explain N/A. |
+
+State actual save/reopen status. Any applicable failure makes the overall result fail; a required incomplete item prevents an overall pass. Local pass does not imply whole-board, production, or physical-performance acceptance. After changing parameters or rules, recheck affected items and dependent checks only.
 
 ## Run DFM After DRC
 

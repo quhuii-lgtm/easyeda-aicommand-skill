@@ -5,6 +5,7 @@
 | 任务 | 指令 | 用途 |
 | --- | --- | --- |
 | 查看现状 | `schematic.getPageInfo`、`schematic.listComponents`、`schematic.listPins`、`schematic.listNets` | 确认目标图页、器件、引脚和网络。 |
+| 功能分区 | `schematic.placeRegion`、`schematic.listRects`、`schematic.modifyRect` | 新绘功能区先画带标题的框，读回范围；按内容调整大小，不漏画或只写分区计划。 |
 | 放置器件 | `schematic.placeDevice` | 放置器件后核对封装资源和引脚映射；放置成功不代表可直接转入 PCB。 |
 | 接线 | `schematic.labelWire`、`schematic.linkWire`、`schematic.batchWire`、`schematic.drawWire` | 单引脚接网、两脚直连、批量接线或指定路径绘线。 `linkWire` 必须恰好提供两个引脚。 |
 | 网络标签 | `schematic.placeNetLabel` | 指定网络标签位置；`drawWire` 已设置网络名时不要再在同段线上叠加同名标签。 |

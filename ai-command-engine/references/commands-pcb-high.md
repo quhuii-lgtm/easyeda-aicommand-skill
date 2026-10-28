@@ -1,6 +1,6 @@
 # High-Frequency PCB Commands
 
-This task index does not indicate call counts or verification status. Check command parameters in `GET /help?cmd=<command>` for the active window. Coordinates and lengths are often in mil; follow help. See [PCB operating requirements](PCB操作要求.md) and [PCB command details](commands-pcb.md).
+This task index does not indicate call counts or verification status. Check command parameters in `GET /help?cmd=<command>` for the active window. Coordinates and lengths are often in mil; follow help. Before the first PCB write, read [PCB operating requirements](PCB操作要求.md) and [PCB command details](commands-pcb.md) in full. See [optional tool offer rules](PCB操作要求.md#pcb-optional-tools) and [completion checks](PCB操作要求.md#pcb-completion-checks).
 
 | Task | Commands | Purpose and limits |
 | --- | --- | --- |

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026.10.28.4
+
+- Made schematic and PCB first-write reading requirements and operation order explicit.
+- Unified acceptance items, methods, pass criteria, result format, and save/reopen scope.
+- Clarified when to offer optional PCB tools, reuse existing choices, and wait for a decision without adding stepwise approval to necessary authorized work.
+- Preserved complete task references and concise bilingual instructions. No plugin runtime or .eext change.
+
 ## 2026.10.28.3
 
 - Clarified that ARC duplicate/split checks compare tracks only within the same layer and net; other tracks follow normal checks.

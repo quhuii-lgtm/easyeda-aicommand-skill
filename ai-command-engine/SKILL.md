@@ -7,6 +7,25 @@ description: Query, draw, edit, and inspect schematics, PCBs, projects, and comp
 
 Operate JLCEDA Professional through the local command proxy. Send structured commands; do not write ad hoc `eda.*` scripts.
 
+## Schematic Drawing Is Required
+
+Before the first schematic write, read [Schematic Requirements](references/原理图操作要求.md) and [Schematic Workflow](references/commands-schematic.md) in full. Do not start drawing from the command index alone.
+
+- Follow this order: draw functional-area boxes and titles → place components and read actual pins → wire one area at a time → check each area → inspect and save the whole page.
+- Every new functional area must have an actual box and title. Edit existing drawings only within the authorized scope.
+- Directly connect nearby pins on the same net within an area, including GND. Do not replace these connections with one label per pin for convenience.
+- Use the unified [Schematic Completion Checks](references/原理图操作要求.md#schematic-completion-checks). Report electrical connectivity and visual layout separately. For whole-schematic delivery, save, reopen, and read back. Do not report unchecked items as passing.
+
+## PCB Operations Are Required
+
+Before the first PCB write, read [PCB Requirements](references/PCB操作要求.md) and [PCB Workflow](references/commands-pcb.md) in full. Do not start from the command index alone.
+
+- Follow this order: inspect current state and design conditions → mechanical setup, layers, and rules → place components by actual pads → check routability → route critical and ordinary nets → create actual copper pours and silkscreen → run DRC and applicable manufacturing checks → save for delivery.
+- Base placement on real pads, critical loops, and return paths. Default macro placement does not prove layout quality.
+- When conditions are met, offer optional grouping or autorouting per [Optional Tools and When to Offer Them](references/PCB操作要求.md#pcb-optional-tools) and ask before using. Reuse an explicit prior choice without asking again.
+- Report methods, conclusions, evidence, and omissions for each item in [PCB Completion Checks](references/PCB操作要求.md#pcb-completion-checks). Zero DRC errors, a copper outline, or a completed routing service does not replace board acceptance.
+- For local tasks, change only the authorized scope. Do not force a full-board manufacturing handoff or report unchecked items as passing.
+
 ## Getting Started
 
 1. Follow [Connection and Environment](references/setup.md) to check the service, instance, and current project.

@@ -1,6 +1,6 @@
 # PCB Workflow
 
-Before drawing or editing, plan placement, routing, layer changes, and manufacturing requirements using [PCB operating requirements](PCB操作要求.md). Use this page for execution order, indexes for command names, and the target plugin version's help for parameters.
+Before the first PCB write, read [PCB operating requirements](PCB操作要求.md) and this page in full. Follow its [required operation order](PCB操作要求.md#required-operation-order), [optional tool offer rules](PCB操作要求.md#pcb-optional-tools), and [completion checks](PCB操作要求.md#pcb-completion-checks). Use this page for execution details and indexes for command names; use the target plugin version's help for parameters.
 
 ## Read the design and current board
 
@@ -14,7 +14,7 @@ Use `pcb.listComponents`, `pcb.getComponentPads`, `pcb.listNets`, and `pcb.listL
 - `pcb.setCopperLayers` sets copper-layer count but does not configure physical stackup. Read back after applying a stackup; a default stackup is not proof it is applied to the current PCB.
 - Use layer names and numbers from current help. Do not guess unknown names; confirm inner layers are available on this board.
 - After `pcb.moveComponent`, verify position, angle, side, and lock state. `pcb.checkPlacement` uses readable pad boundaries; skipped or unsupported objects do not count as a pass.
-- Use `pcb.groupBySchematicRegions` only when asked to arrange by functional region. Review `dryRun`, board fit, and size sources before execution.
+- When schematic import/update has been read back and sources are verifiable, offer grouping by functional region if the user has not already chosen. Reuse an explicit choice; do not execute without a reply. If selected, review `dryRun`, board fit, and size sources before execution. See [optional tool offer rules](PCB操作要求.md#pcb-optional-tools).
 
 ## Routing and vias
 
@@ -67,7 +67,7 @@ Use `pcb.modifyComponentAttribute` to adjust designator position, angle, font, o
 
 1. Use `pcb.runDrcDetailed` to locate issues by object, net, rule, and layer; do not rely on totals alone.
 2. Use `pcb.runDfm`, `pcb.runSmtDfm`, and `pcb.checkManufacturingProfile` as required. Profile data needs sources; verify actual manufacturer stackup, calculations, and order separately.
-3. After `pcb.save`, check the result. To confirm persistence, close and reopen and compare target objects.
+3. After `pcb.save`, check the result. Follow the [save and reopen scope](PCB操作要求.md#save-and-reopen-scope): local changes generally need target/affected/non-target readback and save; whole-board delivery or listed persistence-sensitive changes require reopening the affected PCB.
 4. Export Gerber, BOM, placement data, or netlist as needed. Check units, layers, holes, and component information using [production file requirements](生产文件操作要求.md).
 
 DRC, manufacturing geometry checks, and production-order consistency are separate conclusions. If project manufacturing data is missing, do not guess board thickness, copper weight, Dk, or impedance parameters.
