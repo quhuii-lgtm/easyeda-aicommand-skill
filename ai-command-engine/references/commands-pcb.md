@@ -47,6 +47,8 @@ The plugin uses an already-running FreeRouting REST service and has no launcher.
 
 `applyLayerWidthRules` defaults to `false`. When explicitly `true`, it converts only layer widths that can be reliably confirmed and reports changes; unknown, conflicting, or changed sources reject conversion. It does not modify EDA rules. `routingConstraintsComplete:false` means the rules check is incomplete.
 
+Track-width support is determined by TRACK fields, units, enabled copper layers, and matching source/SDK rule bindings, without a host-version allowlist. Unknown or conflicting structures report the specific reason.
+
 SES often lacks reliable drill diameter. For exact import, provide the current drill using `viaHoleDiametersMil`; do not infer it from via copper diameter. `widthRuleCompliance` distinguishes known violations from unknown rules: violations reject before writing; unknown does not mean pass.
 
 Deduplication of existing ARC polylines occurs only when the corresponding source record can be confirmed. Import does not silently quantize original coordinates, merge short segments, or change nets to pass checks. Treat unverifiable cases as errors. See [PCB special topics](commands-pcb-special.md) for response fields.

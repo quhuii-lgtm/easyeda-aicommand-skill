@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026.10.29
+
+- Clarified structure-based track-width support without a fixed host-version allowlist. Unknown or conflicting fields still report their reason.
+- Updated the corresponding plugin link to v0.20.126; retained concise operating instructions and existing workflow requirements.
+
 ## 2026.10.28.4
 
 - Made schematic and PCB first-write reading requirements and operation order explicit.

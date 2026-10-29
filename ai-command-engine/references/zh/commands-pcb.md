@@ -57,6 +57,8 @@
 
 `applyLayerWidthRules` 默认false。显式true只转换当前能可靠确认的分层线宽，并披露变化；未知、冲突或来源变化会拒绝转换，不修改EDA规则。`routingConstraintsComplete:false` 不能当全部规则已处理。
 
+线宽规则按 TRACK 字段、单位、启用铜层及源码与 SDK 的规则绑定判断，不按宿主版本白名单判断；结构未知或冲突时返回具体原因。
+
 SES通常没有可信钻孔孔径。需要精确直接写入时，用 `viaHoleDiametersMil` 给出本次明确孔径；不能从铜外径猜孔径。`widthRuleCompliance` 分为已知违规和未知规则：违规写前拒绝，unknown不是通过。
 
 已有ARC折线去重只在对应来源记录可确认时执行。导入不静默量化原坐标、合并短段或修改网络来通过检查；无法确认时按实际错误处理。更多结果字段见PCB专题。
