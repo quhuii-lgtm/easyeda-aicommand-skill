@@ -28,7 +28,7 @@ Before the first PCB write, read [PCB Requirements](references/PCB操作要求.m
 
 ## Getting Started
 
-1. Follow [Connection and Environment](references/setup.md) to check the service, instance, and current project.
+1. Follow [Connection and Environment](references/setup.md). If the proxy is stopped, start the bundled proxy in the background with `scripts/start-proxy.ps1` on Windows, then check the instance and current project. Do not open a console window or launch a custom URL.
 2. Query command help for the target plugin version and use the parameters it returns.
 3. Before drawing or editing, read the relevant operation requirements and workflow. For read-only inspection, drawing guides are not required.
 

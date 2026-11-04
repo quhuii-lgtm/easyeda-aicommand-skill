@@ -1,12 +1,24 @@
 # Connection and Environment
 
-## Install and Start
+## Install and Start in the Background
 
-The extension, command proxy, and skill are separate components. Check their versions; replacing files on disk does not prove a running instance has upgraded.
+Install the EDA `.eext` and the complete `ai-command-engine` skill separately. The skill includes the proxy. The complete plugin source and a Windows URL registration are not required. Use Node.js >=20.17.0.
 
-For a first install, get the complete source from the [project repository](https://github.com/quhuii-lgtm/easyeda-aicommand), run `npm ci` in the directory containing `package-lock.json`, then start `node bridge/command-proxy.mjs`. Do not copy only the proxy script or use `npm ci --omit=dev`. Install the extension from [Releases](https://github.com/quhuii-lgtm/easyeda-aicommand/releases) in EDA and allow external interaction. Get the required Node.js version from the repository's `package.json`. The proxy performs SMT part queries locally; EDA does not need to be online for those queries.
+On first use, run `npm ci --omit=dev` in this skill's root directory to install its locked runtime dependency. After updating the skill, install from its new lockfile and preserve existing user settings.
 
-If the service is stopped, use `bridge/launch-proxy.bat` or the registered `ai-command-proxy://start` handler. The launcher may reuse a compatible process; do not stop a shared proxy blindly. The development debug connection prompt is a different service. Normal installations do not need unrelated development servers.
+Check `http://127.0.0.1:49720/health` before operating. If the proxy is stopped, the AI runs this through its terminal tool, replacing the placeholder with this skill's actual path:
+
+```powershell
+powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "<skill-directory>/scripts/start-proxy.ps1"
+```
+
+The launcher runs Node hidden in the background, without a console window or a custom URL. It verifies service identity and reuses a compatible running proxy. Failures return a specific error. It does not stop unknown processes or silently change ports. Verify health, then check the EDA connection.
+
+The enabled EDA plugin connects automatically, including when the proxy starts later. If the user stopped the bridge through the menu, ask them to choose Start Bridge to resume; do not bypass that pause.
+
+A newly started proxy stores credentials, logs, and backups in `%LOCALAPPDATA%/ai-command-engine`, outside the skill folder. Updating the skill does not replace these files. A reused older proxy keeps its existing data directory; credentials are not migrated automatically. On macOS/Linux, use `node scripts/command-proxy.mjs` with the platform's background-launch facilities; those startup paths have not been verified in this update.
+
+Development debug connection prompts refer to a different service. Normal use does not need an unrelated development server.
 
 ## Select an Instance and Document
 

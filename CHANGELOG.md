@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026.11.03
+
+- Distribute the local command proxy with the standalone skill. The Windows launcher starts it hidden and checks service health.
+- Pin the runtime dependency to `ws` 8.22.0 in the lockfile; installation uses Node.js >=20.17.0 and `npm ci --omit=dev` from the skill root.
+- Keep proxy data outside the skill folder so skill updates preserve user data. A compatible running proxy can be reused without a forced replacement.
+- Update the companion plugin reference to [v0.20.127](https://github.com/quhuii-lgtm/easyeda-aicommand/releases/tag/v0.20.127). Plugin and skill versions remain independent.
+- Download the [English/Chinese skill ZIP](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/download/v2026.11.03/ai-command-engine-skill_v2026.11.03_en-zh.zip) from the [2026.11.03 release page](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/tag/v2026.11.03).
+
 ## 2026.10.29
 
 - Clarified structure-based track-width support without a fixed host-version allowlist. Unknown or conflicting fields still report their reason.

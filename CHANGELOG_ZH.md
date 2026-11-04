@@ -1,5 +1,13 @@
 # 更新记录
 
+## 2026.11.03
+
+- 本地指令代理随独立技能分发；Windows 启动器隐藏后台启动代理并检查服务健康状态。
+- 锁文件将运行依赖固定为 `ws` 8.22.0；使用 Node.js >=20.17.0，并在技能根目录运行 `npm ci --omit=dev`。
+- 代理数据保存在技能目录外，更新技能不会覆盖用户数据；兼容代理可复用，不强制替换。
+- 配套插件链接更新为 [v0.20.127](https://github.com/quhuii-lgtm/easyeda-aicommand/releases/tag/v0.20.127)。插件与技能版本仍独立。
+- 从[技能 2026.11.03 发布页](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/tag/v2026.11.03)下载[中英双语 ZIP](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/download/v2026.11.03/ai-command-engine-skill_v2026.11.03_en-zh.zip)。
+
 ## 2026.10.29
 
 - 说明线宽规则按实际数据结构判断，不按固定宿主版本白名单；结构未知或冲突仍返回原因。

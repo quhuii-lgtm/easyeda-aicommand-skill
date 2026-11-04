@@ -1,12 +1,24 @@
 # 连接与环境
 
-## 安装与启动
+## 安装与后台启动
 
-扩展包、指令代理和技能是三个独立部分。核对它们的版本，不把替换磁盘文件当成运行实例已升级。
+插件 `.eext` 与完整 `ai-command-engine` 技能分别安装。代理随技能提供，无需下载完整插件源码，也无需注册 Windows 启动链接。Node.js 要求 >=20.17.0。
 
-首次安装可从[项目仓库](https://github.com/quhuii-lgtm/easyeda-aicommand)取得完整源码，在含 `package-lock.json` 的目录运行 `npm ci`，再运行 `node bridge/command-proxy.mjs`。不要只复制代理脚本或使用 `npm ci --omit=dev`。扩展包从[Releases](https://github.com/quhuii-lgtm/easyeda-aicommand/releases)下载，在 EDA 中安装并允许外部交互。Node版本要求以仓库 `package.json` 为准。SMT物料查询由代理本地执行，不要求EDA在线。
+首次使用在技能根目录运行 `npm ci --omit=dev`，安装锁定的代理运行依赖。更新技能后按新锁文件重装依赖；保留用户已有配置。
 
-服务未运行时，使用配套 `bridge/launch-proxy.bat` 或已注册的 `ai-command-proxy://start`。启动器可能复用兼容进程；不要盲目停止共享代理。开发调试连接提示与本指令代理不是同一服务，正常安装包不需要启动无关开发服务器。
+每次操作先检查 `http://127.0.0.1:49720/health`。代理未运行时，由 AI 通过终端工具执行，替换为当前技能的真实路径：
+
+```powershell
+powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "<技能目录>/scripts/start-proxy.ps1"
+```
+
+启动器隐藏后台运行 Node，不打开黑窗或系统启动链接。它检查服务身份并复用已运行的兼容代理。失败返回具体错误；不结束未知进程，也不自动改端口。启动后核对健康响应，再查 EDA 连接。
+
+EDA 插件启用后自动连接代理。代理晚于 EDA 启动时，插件会继续探测并接入。若用户曾在菜单停止桥接，由用户点击“启动桥接”恢复，不绕过暂停。
+
+新启动代理的凭据、日志与备份保存在 `%LOCALAPPDATA%/ai-command-engine`，不写入技能目录，也不随技能更新覆盖。已运行的旧代理继续使用原数据目录，不自动迁移凭据。macOS/Linux 可用 `node scripts/command-proxy.mjs` 配合当地后台启动方式；本轮未验证这两个系统的启动体验。
+
+开发调试连接提示与本指令代理不是同一服务。正常使用不需要无关开发服务器。
 
 ## 选择实例与文档
 
