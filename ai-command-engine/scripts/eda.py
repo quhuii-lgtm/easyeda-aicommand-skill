@@ -10,32 +10,58 @@
 """
 import argparse
 import json
+import os
 import urllib.request
 
-BASE = 'http://localhost:49720'
+PORT_START = 49720
+PORT_END = 49729
+EXPLICIT_BASE = os.environ.get('AI_COMMAND_PROXY_URL', '').rstrip('/')
+
+
+def _read_json(url, timeout=10, request=None):
+    with urllib.request.urlopen(request or url, timeout=timeout) as resp:
+        return json.loads(resp.read().decode('utf-8'))
+
+
+def _find_proxy():
+    """Find one healthy local proxy endpoint. Never resends a command to another port."""
+    bases = [EXPLICIT_BASE] if EXPLICIT_BASE else [f'http://localhost:{port}' for port in range(PORT_START, PORT_END + 1)]
+    failures = []
+    for base in bases:
+        try:
+            info = _read_json(base + '/health', timeout=0.5)
+        except Exception as error:
+            failures.append(f'{base}: {error}')
+            continue
+        if isinstance(info, dict) and info.get('ok') is True and info.get('service') == 'ai-command-proxy' and info.get('lifecycleProtocol') == 1:
+            return base, info
+        failures.append(f'{base}: incompatible health response')
+    message = 'No compatible AI Command Proxy was found.'
+    if failures:
+        message += ' ' + '; '.join(failures)
+    raise ConnectionError(message)
 
 
 def health():
     """代理与扩展在线状态；extension 字段是当前选中的 EDA 窗口实例。"""
-    with urllib.request.urlopen(BASE + '/health', timeout=10) as resp:
-        return json.loads(resp.read().decode('utf-8'))
+    return _find_proxy()[1]
 
 
 def connections():
     """所有已连接的 EDA 窗口实例（多开窗口时排查用）。"""
-    with urllib.request.urlopen(BASE + '/connections', timeout=10) as resp:
-        return json.loads(resp.read().decode('utf-8'))
+    base, _ = _find_proxy()
+    return _read_json(base + '/connections')
 
 
 def select(instance_id):
     """切换代理的全局所选实例；不能替代每条请求的 instance_id 路由。"""
+    base, _ = _find_proxy()
     req = urllib.request.Request(
-        BASE + '/select',
+        base + '/select',
         data=json.dumps({'instanceId': instance_id}).encode('utf-8'),
         headers={'Content-Type': 'application/json'},
     )
-    with urllib.request.urlopen(req, timeout=10) as resp:
-        return json.loads(resp.read().decode('utf-8'))
+    return _read_json(req)
 
 
 def _require_instance_id(instance_id):
@@ -46,13 +72,13 @@ def _require_instance_id(instance_id):
 def cmd(name, params=None, timeout=120, *, instance_id):
     """发送一条指令，返回 {ok, cmd, data|error, durationMs}。失败时抛出带 message 的异常。"""
     _require_instance_id(instance_id)
+    base, _ = _find_proxy()
     req = urllib.request.Request(
-        BASE + '/command',
+        base + '/command',
         data=json.dumps({'instanceId': instance_id, 'cmd': name, 'params': params or {}}).encode('utf-8'),
         headers={'Content-Type': 'application/json'},
     )
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        result = json.loads(resp.read().decode('utf-8'))
+    result = _read_json(req, timeout=timeout)
     if not result.get('ok'):
         raise RuntimeError(json.dumps(result.get('error'), ensure_ascii=False))
     return result
@@ -61,13 +87,13 @@ def cmd(name, params=None, timeout=120, *, instance_id):
 def macro(steps, stop_on_error=False, timeout=300, *, instance_id):
     """发送宏指令。steps: [{'id'?, 'cmd', 'params'?}, ...]；返回各步结果列表。"""
     _require_instance_id(instance_id)
+    base, _ = _find_proxy()
     req = urllib.request.Request(
-        BASE + '/command',
+        base + '/command',
         data=json.dumps({'instanceId': instance_id, 'cmd': 'macro', 'params': {'stopOnError': stop_on_error, 'steps': steps}}).encode('utf-8'),
         headers={'Content-Type': 'application/json'},
     )
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        result = json.loads(resp.read().decode('utf-8'))
+    result = _read_json(req, timeout=timeout)
     if not result.get('ok'):
         raise RuntimeError(json.dumps(result.get('error'), ensure_ascii=False))
     return result.get('data', {}).get('steps', [])

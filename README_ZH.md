@@ -2,14 +2,16 @@
 
 [English](README.md)
 
-本仓库分发 `ai-command-engine` 技能和配套本地代理。技能版本为 **2026.11.03**，独立于 EDA 插件版本。本轮配套插件为 0.20.127 候选；发布状态以各自发布页为准。
+本仓库分发 `ai-command-engine` 技能和配套本地代理。技能版本为 **2026.11.08**，与 EDA 插件独立编号，配套插件为 **0.20.128**。Windows / 嘉立创 EDA 专业版 4.1.93 已完成代理启动、端口发现、自动连接、SMT 入口和只读查询的限定宿主验收；Linux 宿主行为尚未验证。
 
 ## 安装与使用
 
-1. 从[技能 2026.11.03 发布页](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/tag/v2026.11.03)下载[中英双语 ZIP](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/download/v2026.11.03/ai-command-engine-skill_v2026.11.03_en-zh.zip)，将完整 `ai-command-engine/` 安装到 AI 工具的技能目录。保留入口、`references/`、`scripts/`、`package.json`、`package-lock.json`、`VERSION` 和 `LICENSE`。
+1. 从[技能 2026.11.08 发布页](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/tag/v2026.11.08)下载[中英双语 ZIP](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/download/v2026.11.08/ai-command-engine-skill_v2026.11.08_en-zh.zip)，将完整 `ai-command-engine/` 安装到 AI 工具的技能目录。保留入口、`references/`、`scripts/`、依赖文件、`VERSION` 和 `LICENSE`。
 2. 使用 Node.js >=20.17.0，在技能根目录运行 `npm ci --omit=dev`。无需下载或构建完整插件源码。
 3. 让 AI 阅读技能并按[连接说明](ai-command-engine/references/zh/setup.md)运行 `scripts/start-proxy.ps1`，在 Windows 隐藏后台启动代理。
-4. 在 EDA 安装配套 `.eext` 并允许外部交互。插件自动连接；代理未运行时不会自动打开系统链接。检查连接并做只读 `project.getInfo`，再进行已授权操作。
+4. 从[插件 v0.20.128 发布页](https://github.com/quhuii-lgtm/easyeda-aicommand/releases/tag/v0.20.128)安装配套 `.eext` 并允许外部交互。插件自动发现兼容代理；开始修改前用只读 `project.getInfo` 核对目标连接。
+
+2026.11.08 会在 `49720–49729` 中选择可用端口，插件扫描同一范围发现兼容代理。Windows 启动器会返回实际 `baseUrl`；显式指定端口时只使用该端口。
 
 代理数据保存在技能目录外。更新技能不覆盖凭据与备份；已有兼容代理继续使用原数据目录，不强行重启。Node运行依赖首次安装需要联网，正常绘图不要求SMT密钥。
 

@@ -6,13 +6,20 @@
 
 首次使用在技能根目录运行 `npm ci --omit=dev`，安装锁定的代理运行依赖。更新技能后按新锁文件重装依赖；保留用户已有配置。
 
-每次操作先检查 `http://127.0.0.1:49720/health`。代理未运行时，由 AI 通过终端工具执行，替换为当前技能的真实路径：
+代理未运行时，由 AI 通过终端工具执行，替换为当前技能的真实路径：
 
 ```powershell
 powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "<技能目录>/scripts/start-proxy.ps1"
 ```
 
-启动器隐藏后台运行 Node，不打开黑窗或系统启动链接。它检查服务身份并复用已运行的兼容代理。失败返回具体错误；不结束未知进程，也不自动改端口。启动后核对健康响应，再查 EDA 连接。
+启动器先检查 `49720–49729` 是否已有兼容代理，再让 Node 隐藏后台绑定一个可用端口。它返回包含实际 `port` 和 `baseUrl` 的 JSON；复用服务时也会返回真实端点。后续 HTTP 请求沿用该 `baseUrl`。
+
+```powershell
+$proxy = powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "<技能目录>/scripts/start-proxy.ps1" | ConvertFrom-Json
+Invoke-RestMethod "$($proxy.baseUrl)/health"
+```
+
+需要固定端口时可传入 `-Port`；指定端口失败后不会切换到其他端口。插件扫描相同范围，并且只连接健康响应包含 `service:"ai-command-proxy"` 和 `lifecycleProtocol:1` 的代理。启动器保留绑定错误的原始信息，包括 `EACCES`／Windows `10013`；不会把所有绑定失败都称为端口占用，也不会结束未知进程。
 
 EDA 插件启用后自动连接代理。代理晚于 EDA 启动时，插件会继续探测并接入。若用户曾在菜单停止桥接，由用户点击“启动桥接”恢复，不绕过暂停。
 
@@ -22,12 +29,12 @@ EDA 插件启用后自动连接代理。代理晚于 EDA 启动时，插件会�
 
 ## 选择实例与文档
 
-1. 请求 `GET http://localhost:49720/health`，确认 `service:"ai-command-proxy"` 和 `lifecycleProtocol:1`。
-2. 请求 `GET /connections`，按工程、文档和版本选择实例。不能只看 `selected` 或连接时间。
+1. 使用启动器返回的 `baseUrl`；也可扫描 `http://127.0.0.1:49720` 至 `http://127.0.0.1:49729`，只选择健康字段包含 `service:"ai-command-proxy"` 和 `lifecycleProtocol:1` 的服务。
+2. 请求 `<baseUrl>/connections`，按工程、文档和版本选择实例。不能只看 `selected` 或连接时间。
 3. 调用 `project.getInfo` 读取实际工程及文档UUID。需要切页时显式调用 `editor.openDocument`。
 4. 每条命令前刷新连接，确认目标仍在线；实例暂停时由使用者在 EDA 菜单恢复，不绕过暂停。
 
-提交到 `POST http://localhost:49720/command`，请求头为 `Content-Type: application/json`：
+提交到 `POST <baseUrl>/command`，请求头为 `Content-Type: application/json`：
 
 ```json
 {"instanceId":"<已核实实例>","cmd":"project.getInfo","params":{}}
@@ -38,6 +45,8 @@ EDA 插件启用后自动连接代理。代理晚于 EDA 启动时，插件会�
 ```
 
 `instanceId` 放在请求顶层，不能放进 `params`。离线目标不改投其他窗口。
+
+可选助手 `scripts/eda.py` 会在每次调用前扫描同一端口范围并核对代理身份。只有明确要固定到某个代理时才设置 `AI_COMMAND_PROXY_URL`。每条命令只发往已发现的单个端点；失败后不会改投其他端口重发。
 
 `GET /help?cmd=<命令名>` 使用代理当前选中的实例；先核对其版本。多窗口时可在目标实例调用 `__help`。不要猜测参数或自行拼写 SDK 调用。
 
@@ -73,6 +82,6 @@ EDA 插件启用后自动连接代理。代理晚于 EDA 启动时，插件会�
 
 升级前结束已知操作并保存；有未知写入时先核对现场。扩展与代理配套更新后，核对实际进程路径、启动时间和连接版本。
 
-宿主健康探测使用 `http://localhost:49720/health`。本机转发层可能把连接失败包装成HTTP 500；先判断是否真的有兼容服务，不因500盲目再启动进程。
+插件健康探测范围为 `49720–49729`。本机转发层可能把连接失败包装成HTTP 500；只有服务身份匹配才会连接。技能启动器也会先检查同一范围，再决定是否启动代理。后续请求使用它返回的 `baseUrl`。
 
 后台计时可能降频，不能仅据计时延迟认定断线。只有确认没有在途任务并完成连接探测后，才处理旧连接或退出旧进程。

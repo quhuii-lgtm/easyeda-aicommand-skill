@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026.11.08
+
+- Search ports `49720–49729`, reuse compatible services, and report the actual proxy endpoint.
+- Update the companion plugin reference to [v0.20.128](https://github.com/quhuii-lgtm/easyeda-aicommand/releases/tag/v0.20.128); plugin and skill versions remain independent.
+- Windows / JLCEDA Pro 4.1.93 startup, discovery, automatic connection, SMT entry, and read-only checks passed; Linux host behavior is untested.
+
 ## 2026.11.03
 
 - Distribute the local command proxy with the standalone skill. The Windows launcher starts it hidden and checks service health.

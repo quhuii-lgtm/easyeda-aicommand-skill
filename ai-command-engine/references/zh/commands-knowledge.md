@@ -26,9 +26,9 @@ smt.queryComponent由代理本地执行。
 | `smt.queryComponent` | 查询可贴装物料。 | 需要按工艺选料时。 | 代理须已配置本机开放平台凭证。 |
 
 - 返回 `components[].code` 即立创编号，可直接用于 `schematic.placeDevice`。
-- 首次使用：让用户打开 `http://127.0.0.1:49720/smt` 填 appId / accessKey / secretKey（存于 `bridge/jlc-credentials.json`，升级不丢失，保存即时生效不用重启代理）。
+- 首次使用：使用当前代理的 `baseUrl` 拼接 `/smt`，让用户填写 appId / accessKey / secretKey。凭证保存在 `%LOCALAPPDATA%/ai-command-engine/jlc-credentials.json`，更新技能不会覆盖该文件，保存即时生效。
 - 该页面也支持人工查询。
 - 缺少密钥时，让用户打开https://open.jlc.com。
 - 登录后选择“快速接入→创建应用”。
 - 创建后取得appId、accessKey和secretKey。
-- 密钥只存本机（代理目录 jlc-credentials.json，.gitignore 已排除），勿提交 git、勿外发。
+- 密钥只存本机，勿提交 git、勿外发。

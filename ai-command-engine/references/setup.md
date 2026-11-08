@@ -6,13 +6,22 @@ Install the EDA `.eext` and the complete `ai-command-engine` skill separately. T
 
 On first use, run `npm ci --omit=dev` in this skill's root directory to install its locked runtime dependency. After updating the skill, install from its new lockfile and preserve existing user settings.
 
-Check `http://127.0.0.1:49720/health` before operating. If the proxy is stopped, the AI runs this through its terminal tool, replacing the placeholder with this skill's actual path:
+If the proxy is stopped, the AI runs this through its terminal tool, replacing the placeholder with this skill's actual path:
 
 ```powershell
 powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "<skill-directory>/scripts/start-proxy.ps1"
 ```
 
-The launcher runs Node hidden in the background, without a console window or a custom URL. It verifies service identity and reuses a compatible running proxy. Failures return a specific error. It does not stop unknown processes or silently change ports. Verify health, then check the EDA connection.
+The launcher checks ports `49720–49729` for a compatible proxy, then starts Node hidden in the background on an available port. It does not open a console window or custom URL. It prints JSON with the actual `port` and `baseUrl`, including when reusing a service. Keep that `baseUrl` for all HTTP requests in this session. A manually supplied `-Port` pins startup to that port; it does not fall back to another port.
+
+Verify the returned service before operating:
+
+```powershell
+$proxy = powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "<skill-directory>/scripts/start-proxy.ps1" | ConvertFrom-Json
+Invoke-RestMethod "$($proxy.baseUrl)/health"
+```
+
+The EDA plugin scans the same range and connects only after confirming `service:"ai-command-proxy"` and `lifecycleProtocol:1`. The launcher preserves binding error details, including `EACCES` / Windows error `10013`; a bind failure is not automatically reported as an occupied listener. It does not stop unknown processes.
 
 The enabled EDA plugin connects automatically, including when the proxy starts later. If the user stopped the bridge through the menu, ask them to choose Start Bridge to resume; do not bypass that pause.
 
@@ -22,12 +31,12 @@ Development debug connection prompts refer to a different service. Normal use do
 
 ## Select an Instance and Document
 
-1. Request `GET http://localhost:49720/health` and confirm `service:"ai-command-proxy"` and `lifecycleProtocol:1`.
-2. Request `GET /connections` and select by project, document, and version. Do not rely only on `selected` or connection time.
+1. Use the launcher's returned `baseUrl`, or scan `http://127.0.0.1:49720` through `http://127.0.0.1:49729` and select a response whose health has `service:"ai-command-proxy"` and `lifecycleProtocol:1`.
+2. Request `<baseUrl>/connections` and select by project, document, and version. Do not rely only on `selected` or connection time.
 3. Call `project.getInfo` to read the actual project and document UUID. To switch pages, call `editor.openDocument` explicitly.
 4. Refresh the connection before each command and confirm the target is online. If the instance is paused, have the user resume it from the EDA menu; do not bypass the pause.
 
-Send commands to `POST http://localhost:49720/command` with `Content-Type: application/json`:
+Send commands to `POST <baseUrl>/command` with `Content-Type: application/json`:
 
 ```json
 {"instanceId":"<verified instance>","cmd":"project.getInfo","params":{}}
@@ -38,6 +47,8 @@ Send commands to `POST http://localhost:49720/command` with `Content-Type: appli
 ```
 
 `instanceId` belongs at the top level, not inside `params`. Do not redirect a command to a different window when its target is offline.
+
+The optional `scripts/eda.py` helper scans the same range for a compatible proxy before each call. Set `AI_COMMAND_PROXY_URL` only when intentionally pinning it to one proxy. Each call uses one discovered endpoint; it does not resend a failed command to another port.
 
 `GET /help?cmd=<command>` uses the proxy's currently selected instance; check its version first. With multiple windows, call `__help` on the target instance. Do not guess parameters or compose SDK calls yourself.
 
@@ -73,6 +84,6 @@ Commands that register tasks return a `taskId`. If the same task is still runnin
 
 Before upgrading, finish known operations and save. If a write is still unknown, inspect the current state first. After updating the extension and matching proxy, check the running process path, start time, and connected version.
 
-The host health endpoint is `http://localhost:49720/health`. The local forwarding layer may wrap a connection failure in HTTP 500. First check whether a compatible service is already running; do not start another process just because of a 500 response.
+The plugin health probe scans ports `49720–49729`. The local forwarding layer may wrap a connection failure in HTTP 500; it accepts only the matching proxy health identity. The skill launcher checks the same range before starting another process. Preserve other services and use the returned `baseUrl` for follow-up requests.
 
 Background timer throttling can delay timers; timer delay alone does not prove a disconnection. Only handle an old connection or exit an old process after confirming there are no in-flight tasks and completing a connection probe.

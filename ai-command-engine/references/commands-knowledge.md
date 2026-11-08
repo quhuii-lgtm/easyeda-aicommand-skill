@@ -12,6 +12,6 @@ Use `/help?cmd=<command>` in the target window for parameters and return fields.
 
 `smt.queryComponent` runs locally in the proxy; EDA need not be online and no `instanceId` is required. The proxy must be running and have local credentials configured.
 
-Open `http://127.0.0.1:49720/smt` to enter `appId`, `accessKey`, and `secretKey`. Credentials are stored in `bridge/jlc-credentials.json`; saving takes effect immediately and survives proxy upgrades. The page also supports manual searches. Obtain credentials from [JLC Open Platform](https://open.jlc.com) under Quick Access → Create Application. Keep keys local; do not commit or share them.
+Use the current proxy `baseUrl` from [connection and setup](setup.md), for example `<baseUrl>/smt`, to enter `appId`, `accessKey`, and `secretKey`. Credentials are stored in `%LOCALAPPDATA%/ai-command-engine/jlc-credentials.json`; saving takes effect immediately. The page also supports manual searches. Obtain credentials from [JLC Open Platform](https://open.jlc.com) under Quick Access → Create Application. Keep keys local; do not commit or share them.
 
 `components[].code` is the LCSC part number and can be passed to `schematic.placeDevice`.
