@@ -4,9 +4,9 @@ Use `/help?cmd=<command>` in the target window for parameters and return fields.
 
 | Command | Purpose and use | Limits |
 | --- | --- | --- |
-| `knowledge.query` | Search design rules and experience by keyword. | `query` is required; omitted `limit` defaults to 3, otherwise use a positive integer. Evaluate results against the project and component data. |
+| `knowledge.query` | Search design rules and experience. | Evaluate against project and component data. |
 | `knowledge.listRules` | List rule topics when choosing a subject to query. | A topic list is not a design conclusion. |
-| `knowledge.widthForCurrent` | Estimate a starting trace width from current. | `currentA` must be a finite positive number. The estimate does not replace thermal or manufacturing checks. |
+| `knowledge.widthForCurrent` | Estimate trace width from current. | Check thermal and manufacturing requirements separately. |
 
 ## SMT component search
 

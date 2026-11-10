@@ -1,13 +1,15 @@
 # 工程与图页指令
 
+操作顺序：确认窗口和工程 → 打开、创建或导入工程 → 核对 Board 和图页 → 建立或检查原理图与 PCB 的关联 → 读回并保存。只做本轮需要的步骤。
+
 参数、返回和示例以已核对目标窗口的 `/help?cmd=<命令名>` 为准。发送 `/command` 时外层包含 `cmd`、当前核实的顶层 `instanceId` 和所需 `params`；宏步骤继承该实例。文档树 UUID 从 `project.getInfo` 读取，不猜。
 
 ## 工程
 
-- `project.getInfo` 读取当前工程及文档树 UUID；`project.getInfoOf` 查询指定工程。`project.list` 可选 `teamUuid`（非空字符串，原样传入）和 `detail`（布尔值，默认 `false`）。默认使用宿主查询范围；`detail:true` 返回按序 `{uuid, info}` 数组，否则返回 UUID 数组。空列表表示该查询确为空，不代表先前导入未发生；结果异常时先核对范围及团队。
+- `project.getInfo` 读取当前工程及文档树，`project.getInfoOf` 查询指定工程，`project.list` 列出工程。结果异常时先核对查询范围与团队。
 - `project.create` 创建工程；`project.open` 打开指定工程并切换当前工程。打开前确认旧工程已保存，或用户允许丢弃未保存内容；合法目标也不保证保留旧工程未保存数据。
 - `project.moveToFolder` 移动工程，空目录表示根目录；移动前后按工程 UUID 核对位置。
-- `project.exportFile` 导出原生 `.epro` 或 `.epro2`，`fileType` 仅接受 `epro`/`epro2`，默认 `epro`。需要工程管理中的“下载工程”权限。导出成功不等于内容已验收。
+- `project.exportFile` 导出原生工程。需工程下载权限，导出后检查文件内容。
 - `project.importFile` 导入 base64 文件并创建工程。支持的格式包括 `.PcbDoc`、`.SchDoc`、`.epro`、`.epro2`，可由扩展名推断 `fileType`；`newProjectName` 可指定显示名，调用前检查当前团队重名。在线 `.epro2` 省略名称时仅从根 `project2.json.title` 派生；不从文件名猜名、不追加后缀或覆盖同名工程。无法可靠取名或已重名时须显式提供名称。在线 `.epro2` 的根 `description` 会按原字符串写入新工程描述；此规则不适用于离线导入或其他格式。导入 API 为 Beta，不承诺所有格式无损，也不证明已布线 PCB/覆铜持久。
 - 导入调用后若返回空、异常或无合法工程 UUID，结果为 `partial:true`、`retryable:false`、`outcome:unknown`。先按目标名称和目录查工程，不重发。成功返回也须检查工程内容。
 - `project.getDocumentSource` 只读当前激活文档，不接受 UUID 参数。先确认焦点和文档身份；源码坐标不能直接当公开 API 坐标。

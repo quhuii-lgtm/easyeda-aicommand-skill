@@ -1,6 +1,6 @@
 # 操作风险与结果判读
 
-本页记录不能只看 `/help` 参数表判断的风险。常规操作见[原理图指令](commands-schematic.md)、[PCB 指令](commands-pcb.md)和[器件库指令](commands-lib.md)。
+本页记录不能只看 `/help` 参数表判断的风险。常规操作见[原理图功能区指南](schematic-01-functional-areas.md)、[PCB 指令](pcb-01-read-board-and-rules.md)和[器件库指令](commands-lib.md)。
 
 ## 写入结果
 
@@ -26,7 +26,7 @@
 - 连线避开第三方引脚和异网导线共线；宿主可能合并相接导线。已命名的 `drawWire` 不需叠加同名标签。用标签 ID、父导线和属性读回确认附着，视觉靠近不算连接。
 - `getNetlist` / `exportNetlist` 可能更新位号、Unique ID 或保存工程，不是无副作用的纯读取。JLCEDA 类型使用文件生成通道；失败或超时不回退、不重发，先确认原调用结果。
 - `dedupeWireNets` 只处理同一导线上的重复同名属性，不替异名冲突选择网络。重建可能改变图元 ID，之后重新查询。
-- 完整器件更换按[原理图指令中的组合流程](commands-schematic.md)先放新件并核对，再删旧件。PCB 更新由用户在 EDA 界面发起并确认。
+- 完整器件更换按[原理图功能区指南](schematic-01-functional-areas.md)先放新件并核对，再删旧件。PCB 更新由用户在 EDA 界面发起并确认。
 - 原理图视觉检查优先用 `schematic.exportPng`；后台 `editor.screenshot` 可能是旧帧。
 
 ## 器件库和工程树

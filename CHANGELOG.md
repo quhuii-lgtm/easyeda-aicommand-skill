@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.11
+
+- The bilingual guides cover A4 preplanning, the 40-grid default for direct branches and approved exceptions, bends and route candidates, cross-page connections, component replacements, and TEXT verification after reopening.
+
 ## 2026.11.08
 
 - Search ports `49720–49729`, reuse compatible services, and report the actual proxy endpoint.

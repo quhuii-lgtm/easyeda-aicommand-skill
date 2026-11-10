@@ -1,5 +1,7 @@
 # Manufacturing File Requirements
 
+Delivery order: confirm the saved version → export → inspect the files independently → import to the manufacturer or assembly platform if authorized → verify the preview and submission details.
+
 This page covers manufacturing-file export, formats, and platform checks. Manage project-stage acceptance, pending tests, and fabrication feedback according to the project plan. Use the production-export command page linked from the skill entry and follow help for the installed version. Checking a platform page does not mean the plugin can upload files, place orders, or pay.
 
 Use available tools within existing authorization. Check current platform requirements before use.

@@ -1,6 +1,6 @@
 # Operational Risks and Result Interpretation
 
-This page covers risks that cannot be judged from `/help` parameter tables alone. For routine operations, see [schematic commands](commands-schematic.md), [PCB commands](commands-pcb.md), and [library commands](commands-lib.md).
+This page covers risks that cannot be judged from `/help` parameter tables alone. For routine operations, see [schematic functional-area guide](schematic-01-functional-areas.md), [PCB commands](pcb-01-read-board-and-rules.md), and [library commands](commands-lib.md).
 
 ## Write Results
 
@@ -26,7 +26,7 @@ This page covers risks that cannot be judged from `/help` parameter tables alone
 - Route wires clear of third-party pins and collinear wires on other nets; the host may merge touching wires. A named `drawWire` does not need an extra same-name label. Verify label attachment through its ID, parent wire, and properties; visual proximity is not connectivity.
 - `getNetlist` and `exportNetlist` may update designators or Unique IDs, or save the project; they are not necessarily side-effect-free reads. JLCEDA types use the file-generation channel. If the call fails or times out, do not fall back or resend until its outcome is known.
 - `dedupeWireNets` removes duplicate same-name attributes on the same wire; it does not resolve conflicting names by choosing a net. Rebuilding may change graphic IDs, so query them again afterward.
-- For a full component replacement, follow the [schematic command sequence](commands-schematic.md): place and verify the new part before deleting the old one. The user starts and confirms PCB updates in the EDA interface.
+- For a full component replacement, follow the [schematic acceptance guide](schematic-04-acceptance-and-delivery.md): place and verify the new part before deleting the old one. The user starts and confirms PCB updates in the EDA interface.
 - Prefer `schematic.exportPng` for visual checks. A background `editor.screenshot` may show an old frame.
 
 ## Libraries and Project Tree

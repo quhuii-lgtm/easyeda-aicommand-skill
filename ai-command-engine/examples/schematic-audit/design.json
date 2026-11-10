@@ -1,0 +1,118 @@
+{
+  "page": "Example power page",
+  "stage": "sheet",
+  "layoutPlan": {
+    "currentPageId": "example-page-a",
+    "pages": [
+      {
+        "id": "example-page-a",
+        "paper": "A4",
+        "bounds": [
+          0,
+          0,
+          1170,
+          825
+        ],
+        "reserved": [
+          [
+            0,
+            0,
+            1170,
+            120
+          ]
+        ]
+      }
+    ],
+    "blocks": [
+      {
+        "id": "power",
+        "pageId": "example-page-a",
+        "bounds": [
+          30,
+          450,
+          220,
+          750
+        ]
+      }
+    ]
+  },
+  "regions": [
+    {
+      "id": "power",
+      "title": "Example ground link",
+      "maxWidth": 190,
+      "maxHeight": 300
+    }
+  ],
+  "components": [
+    {
+      "ref": "J1",
+      "region": "power",
+      "attributes": {
+        "model": "Example terminal"
+      }
+    },
+    {
+      "ref": "J2",
+      "region": "power",
+      "attributes": {
+        "model": "Example terminal"
+      }
+    }
+  ],
+  "pins": [
+    {
+      "pin": "J1.1",
+      "net": "GND",
+      "nc": false
+    },
+    {
+      "pin": "J2.1",
+      "net": "GND",
+      "nc": false
+    }
+  ],
+  "directGroups": [
+    {
+      "id": "ground-link",
+      "endpoints": [
+        "J1.1",
+        "J2.1"
+      ],
+      "maxLength": 60,
+      "maxBends": 0,
+      "requireStraight": true
+    }
+  ],
+  "branches": [
+    {
+      "id": "ground-branch",
+      "kind": "branch",
+      "connections": [
+        {
+          "net": "GND",
+          "pins": [
+            "J1.1",
+            "J2.1"
+          ]
+        }
+      ]
+    }
+  ],
+  "crossPage": {
+    "pageIds": [
+      "example-page-a",
+      "example-page-b"
+    ],
+    "nets": [
+      {
+        "net": "GND",
+        "pins": [
+          "J1.1",
+          "J2.1",
+          "J3.1"
+        ]
+      }
+    ]
+  }
+}

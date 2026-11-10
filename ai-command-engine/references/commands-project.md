@@ -1,13 +1,15 @@
 # Project and Page Commands
 
+Order: verify the window and project → open, create, or import → inspect boards and pages → establish or check schematic and PCB association → read back and save. Apply only the steps in scope.
+
 Use `/help?cmd=<command>` in the verified target window for parameters, responses, and examples. Each `/command` request includes `cmd`, the current top-level `instanceId`, and required `params`; macro steps inherit that instance. Read document-tree UUIDs from `project.getInfo`; do not guess them.
 
 ## Projects
 
-- `project.getInfo` reads the current project and document tree; `project.getInfoOf` reads a specified project. `project.list` optionally accepts a non-empty `teamUuid` (pass unchanged) and Boolean `detail` (default `false`). Without `detail`, it returns UUIDs; with `detail:true`, it returns ordered `{uuid, info}` entries. An empty result only describes that query. On unexpected results, check the query scope and team.
+- `project.getInfo` reads the current project and document tree, `project.getInfoOf` reads a specified project, and `project.list` lists projects. Check scope and team if results are unexpected.
 - `project.create` creates a project. `project.open` switches to a specified project. Before opening, save the current project or confirm that unsaved work can be discarded; valid targets do not preserve unsaved content in the old project.
 - `project.moveToFolder` moves a project; an empty folder means the root. Check project UUID and location before and after.
-- `project.exportFile` exports native `.epro` or `.epro2`; `fileType` accepts only `epro` or `epro2` and defaults to `epro`. Project download permission is required. Export success does not verify contents.
+- `project.exportFile` exports the native project. It requires project download permission. Verify the exported file.
 - `project.importFile` imports a base64 file and creates a project. Supported formats include `.PcbDoc`, `.SchDoc`, `.epro`, and `.epro2`; `fileType` may be inferred from the extension. Check for duplicate names in the current team. For online `.epro2`, an omitted `newProjectName` is derived only from root `project2.json.title`; the importer does not guess from the filename, append a suffix, or overwrite a same-name project. Provide a name if derivation is unavailable or conflicts. For online `.epro2` only, root `description` is copied as-is. Import is Beta; lossless import and saved PCB routing/copper are not guaranteed.
 - If import returns empty, errors, or no valid project UUID, treat it as `partial:true`, `retryable:false`, `outcome:unknown`. Search by target name and folder before taking any further action. Check project contents after a successful response too.
 - `project.getDocumentSource` reads only the active document and takes no UUID. Confirm document focus and identity; source coordinates are not public API coordinates.

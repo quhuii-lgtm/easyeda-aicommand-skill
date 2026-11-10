@@ -2,7 +2,7 @@
 
 本页按常见任务提供优先入口，不是实际调用次数统计，也不表示指令是否可用或已验收。参数以当前目标窗口的 `/help?cmd=<命令名>` 为准。
 
-原理图命令见[高频索引](commands-schematic-high.md)和[低频索引](commands-schematic-low.md)；PCB 命令见[高频索引](commands-pcb-high.md)和[低频索引](commands-pcb-low.md)。其余命令按任务分类如下。
+原理图按[功能区](schematic-01-functional-areas.md)、[器件布局](schematic-02-component-layout.md)、[接线](schematic-03-wiring-and-area-checks.md)、[验收](schematic-04-acceptance-and-delivery.md)查命令。PCB 按[读板与设计规则](pcb-01-read-board-and-rules.md)、[器件分组与布局](pcb-02-group-and-place.md)、[手动布线与调谐](pcb-03-route-and-tune.md)、[自动布线与SES导入](pcb-04-autoroute-and-import.md)、[覆铜与丝印](pcb-05-copper-and-silkscreen.md)、[检查与保存](pcb-06-verify-and-save.md)查命令。
 
 | 范围 | 常见任务入口 | 特定任务入口 | 详细说明 |
 | --- | --- | --- | --- |

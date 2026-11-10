@@ -9,27 +9,40 @@ Operate JLCEDA Professional through the local command proxy. Send structured com
 
 ## Schematic Drawing Is Required
 
-Before the first schematic write, read [Schematic Requirements](references/原理图操作要求.md) and [Schematic Workflow](references/commands-schematic.md) in full. Do not start drawing from the command index alone.
+Before the first schematic write, read the four stage guides in order. Then perform the steps that apply to the current scope.
 
-- Follow this order: draw functional-area boxes and titles → place components and read actual pins → wire one area at a time → check each area → inspect and save the whole page.
+1. [Plan and Draw Functional Areas](references/schematic-01-functional-areas.md)
+2. [Place and Arrange Components](references/schematic-02-component-layout.md)
+3. [Wire and Check Each Area](references/schematic-03-wiring-and-area-checks.md)
+4. [Verify and Deliver the Schematic](references/schematic-04-acceptance-and-delivery.md)
+
+- Follow this order: draw functional-area boxes and titles → place components and read actual pins → wire one area at a time → run the checker to accept each completed area → run the checker again and review the completed sheet.
+- The skill ships with [check-schematic.mjs](scripts/check-schematic.mjs) for per-block and whole-sheet schematic checks. See the [runnable example](references/schematic-03-wiring-and-area-checks.md#runnable-example-and-result-codes).
 - Every new functional area must have an actual box and title. Edit existing drawings only within the authorized scope.
 - Directly connect nearby pins on the same net within an area, including GND. Do not replace these connections with one label per pin for convenience.
-- Use the unified [Schematic Completion Checks](references/原理图操作要求.md#schematic-completion-checks). Report electrical connectivity and visual layout separately. For whole-schematic delivery, save, reopen, and read back. Do not report unchecked items as passing.
+- Use the unified [Schematic Completion Checks](references/schematic-04-acceptance-and-delivery.md#schematic-completion-checks). Report electrical connectivity and visual layout separately. For whole-schematic delivery, save, reopen, and read back. Do not report unchecked items as passing.
 
 ## PCB Operations Are Required
 
-Before the first PCB write, read [PCB Requirements](references/PCB操作要求.md) and [PCB Workflow](references/commands-pcb.md) in full. Do not start from the command index alone.
+Before the first PCB write, read these guides in order, then follow the steps in the current scope.
+
+1. [Read the Board and Set Rules](references/pcb-01-read-board-and-rules.md)
+2. [Group and Place Components](references/pcb-02-group-and-place.md)
+3. [Route and Tune](references/pcb-03-route-and-tune.md)
+4. [Autoroute and Import SES](references/pcb-04-autoroute-and-import.md)
+5. [Add Copper and Silkscreen](references/pcb-05-copper-and-silkscreen.md)
+6. [Verify and Save](references/pcb-06-verify-and-save.md)
 
 - Follow this order: inspect current state and design conditions → mechanical setup, layers, and rules → place components by actual pads → check routability → route critical and ordinary nets → create actual copper pours and silkscreen → run DRC and applicable manufacturing checks → save for delivery.
 - Base placement on real pads, critical loops, and return paths. Default macro placement does not prove layout quality.
-- When conditions are met, offer optional grouping or autorouting per [Optional Tools and When to Offer Them](references/PCB操作要求.md#pcb-optional-tools) and ask before using. Reuse an explicit prior choice without asking again.
-- Report methods, conclusions, evidence, and omissions for each item in [PCB Completion Checks](references/PCB操作要求.md#pcb-completion-checks). Zero DRC errors, a copper outline, or a completed routing service does not replace board acceptance.
+- When conditions are met, offer optional grouping or autorouting per [Optional Tools and When to Offer Them](references/pcb-01-read-board-and-rules.md#pcb-optional-tools) and ask before using. Reuse an explicit prior choice without asking again.
+- Report methods, conclusions, evidence, and omissions for each item in [PCB Completion Checks](references/pcb-06-verify-and-save.md#pcb-completion-checks). Zero DRC errors, a copper outline, or a completed routing service does not replace board acceptance.
 - For local tasks, change only the authorized scope. Do not force a full-board manufacturing handoff or report unchecked items as passing.
 
 ## Getting Started
 
 1. Follow [Connection and Environment](references/setup.md). If the proxy is stopped, start the bundled proxy in the background with `scripts/start-proxy.ps1` on Windows, then use its returned `baseUrl` to check the instance and current project. The default proxy range is `49720–49729`; the plugin discovers a compatible service automatically.
-2. Query command help for the target plugin version and use the parameters it returns.
+2. Use the command index to choose a command. Query `__help` on the target window for parameters, defaults, return fields, and available examples. See [Connection and Environment](references/setup.md) for the request format.
 3. Before drawing or editing, read the relevant operation requirements and workflow. For read-only inspection, drawing guides are not required.
 
 ## Execution Requirements
@@ -48,15 +61,12 @@ Before the first PCB write, read [PCB Requirements](references/PCB操作要求.m
 | --- | --- |
 | Connection, window selection, units, timeout recovery | [Connection and Environment](references/setup.md) |
 | Find command categories | [Command Categories](references/commands-frequency.md) |
-| Draw or edit a schematic | [Schematic Requirements](references/原理图操作要求.md), [Schematic Workflow](references/commands-schematic.md) |
-| Schematic command index | [High-Frequency Schematic Commands](references/commands-schematic-high.md), [Low-Frequency Schematic Commands](references/commands-schematic-low.md) |
-| PCB placement, routing, pours, and checks | [PCB Requirements](references/PCB操作要求.md), [PCB Workflow](references/commands-pcb.md) |
-| PCB command index | [High-Frequency PCB Commands](references/commands-pcb-high.md), [Low-Frequency PCB Commands](references/commands-pcb-low.md) |
-| Fanout, differential pairs, length tuning, manufacturing checks, autorouter parameters | [PCB Topics](references/commands-pcb-special.md) |
+| Draw or edit a schematic | Follow the four stages above. Each stage includes its command index. |
+| Draw or edit a PCB | Follow the six stages above. Each stage includes a command index. |
 | Projects, boards, sheets, and backups | [Project and Sheet Commands](references/commands-project.md) |
 | Query or maintain symbols, footprints, and devices | [Library Commands](references/commands-lib.md) |
 | Rule knowledge, trace-width estimates, and parts queries | [Knowledge and Parts](references/commands-knowledge.md) |
-| Fabrication outputs, BOM, and coordinate files | [Manufacturing File Requirements](references/生产文件操作要求.md) |
+| Fabrication outputs, BOM, and coordinate files | [Manufacturing File Requirements](references/manufacturing-file-requirements.md) |
 | Properties, labels, netlists, and save issues | [Operational Risks](references/pitfalls.md) |
 | Prepare and submit plugin issues | [Issue Reporting](references/issue-reporting.md) |
-| Develop or review plugin commands | [Extension Development Requirements](references/插件开发要求.md); use extension-dev-skill for SDK information and debugging |
+| Develop or review plugin commands | [Extension Development Requirements](references/extension-development-requirements.md); use extension-dev-skill for SDK information and debugging |

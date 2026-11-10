@@ -11,4 +11,4 @@ This is a task-based navigation aid, not usage statistics or a verification stat
 | Design rules | `knowledge.query` | `knowledge.listRules`, `knowledge.widthForCurrent` | [Knowledge and parts](commands-knowledge.md) |
 | Long-task recovery | `task.get`, `task.list` | — | [Troubleshooting](pitfalls.md) |
 
-For schematic and PCB commands, use the [schematic high-frequency index](commands-schematic-high.md), [schematic task guide](commands-schematic.md), [PCB high-frequency index](commands-pcb-high.md), and [PCB task index](commands-pcb-low.md).
+Find schematic commands by [functional area](schematic-01-functional-areas.md), [placement](schematic-02-component-layout.md), [wiring](schematic-03-wiring-and-area-checks.md), or [acceptance](schematic-04-acceptance-and-delivery.md). For PCB, see [Read the Board and Set Rules](pcb-01-read-board-and-rules.md), [Group and Place Components](pcb-02-group-and-place.md), [Route and Tune](pcb-03-route-and-tune.md), [Autoroute and Import SES](pcb-04-autoroute-and-import.md), [Add Copper and Silkscreen](pcb-05-copper-and-silkscreen.md), [Verify and Save](pcb-06-verify-and-save.md).
