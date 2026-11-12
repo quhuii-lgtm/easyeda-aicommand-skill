@@ -4,6 +4,8 @@ Use `__help` in the target window for parameters, defaults, results, and example
 
 ## Start from the AI Command Engine menu
 
+If the start reply is lost, query status from the original PCB tab to recover the bound job, then stop it if needed. Menu recovery checks this start operation, the original PCB and tab. If a runtime restart loses that binding, verify the service job ID before continuing.
+
 - Start Autorouting checks the local FreeRouting service. If unavailable, choose AI-assisted setup and send the displayed request to a local AI, or choose manual setup to open the official instructions. Return to the menu after setup.
 - Check the job status or stop the job from the menu. After completion, retrieve the SES, check the target PCB, and confirm import separately. Inspect the resulting tracks and run DRC after importing.
 

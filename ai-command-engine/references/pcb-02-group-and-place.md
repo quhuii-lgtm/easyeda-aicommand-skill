@@ -74,6 +74,8 @@ Use `pcb.modifyComponentAttribute` for designator position, angle, font, or visi
 
 ## PCB grouping from the AI Command Engine menu
 
+If recovery after a grouping write cannot be verified, the error carries `cause.partial:true` and a backup ID. Inspect the original PCB before continuing. Macros stop dependent writes even when configured to continue after ordinary errors.
+
 On an active PCB page, open the AI Command Engine menu after connecting the companion proxy. The menu and AI requests use the same command queue for the window.
 
 - For grouping by schematic regions, review the groups, components, and warnings before confirming. The tool backs up the PCB before moving components and adding group outlines and labels. It reads back the result and saves the board. Existing tracks stay in place, so use this before routing.

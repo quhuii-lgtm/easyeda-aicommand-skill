@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.12
+
+- Updated PCB grouping recovery and operation-bound auto-route task recovery guidance.
+
 ## 2026.11.11
 
 - The bilingual guides cover A4 preplanning, the 40-grid default for direct branches and approved exceptions, bends and route candidates, cross-page connections, component replacements, and TEXT verification after reopening.
