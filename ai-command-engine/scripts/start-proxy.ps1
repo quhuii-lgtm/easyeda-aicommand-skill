@@ -52,7 +52,7 @@ function Get-CompatibleProxy {
     $ports = if ($ExplicitPort) { @($Port) } else { $PortStart..$PortEnd }
     foreach ($candidate in $ports) {
         $health = Get-ProxyHealth $candidate
-        if ($health -and $health.ok -eq $true -and $health.service -eq 'ai-command-proxy' -and $health.lifecycleProtocol -eq 1 -and ($null -eq $health.port -or $health.port -eq $candidate)) {
+        if ($health -and $health.ok -eq $true -and $health.service -eq 'ai-command-proxy' -and $health.lifecycleProtocol -eq 1 -and $health.moduleLibraryProtocol -eq 1 -and ($null -eq $health.port -or $health.port -eq $candidate)) {
             return @{ port = $candidate; health = $health }
         }
         if ($ExplicitPort -and $health) {
@@ -112,7 +112,7 @@ try {
         Start-Sleep -Milliseconds 250
         foreach ($candidate in $ports) {
             $health = Get-ProxyHealth $candidate
-            if ($health -and $health.ok -eq $true -and $health.service -eq 'ai-command-proxy' -and $health.lifecycleProtocol -eq 1 -and ($null -eq $health.port -or $health.port -eq $candidate)) {
+            if ($health -and $health.ok -eq $true -and $health.service -eq 'ai-command-proxy' -and $health.lifecycleProtocol -eq 1 -and $health.moduleLibraryProtocol -eq 1 -and ($null -eq $health.port -or $health.port -eq $candidate)) {
                 if ($health.pid -eq $process.Id -and -not $process.HasExited) {
                     @{ ok = $true; status = 'started'; pid = $process.Id; port = $candidate; baseUrl = "http://127.0.0.1:$candidate"; dataDirectory = $stateDir } | ConvertTo-Json -Compress
                     exit 0

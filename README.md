@@ -2,20 +2,22 @@
 
 [简体中文](README_ZH.md)
 
-This repository distributes the `ai-command-engine` skill and its local command proxy. The skill release is **2026.11.12**, independent of EDA extension versions. It accompanies plugin **v0.20.136**. Windows host acceptance on JLCEDA Pro 4.1.93 covered proxy startup, port discovery, automatic connection, SMT entry, and read-only queries; Linux host behavior is untested.
+This repository distributes the complete English/Chinese AI Command Engine skill 2026.11.12.5 and its unified local proxy for plugin v0.21.2. Windows / JLCEDA Pro 4.1.99 verification covered idle proxy recovery, normal Stop/Start and read-only consistency. Use the module-reuse guide for its tested main path and sample limitations.
 
 The bilingual guides cover A4 preplanning, the 40-grid default for direct branches and approved exceptions, bends and route candidates, cross-page connections, component replacements, and TEXT verification after reopening.
 
 The PCB guides now cover partial grouping results when recovery is uncertain and task recovery after an auto-route start response is lost. Recovery uses the original operation ID, PCB and tab.
 
+Companion skill for integrated module reuse and idle proxy recovery. Follow the module-reuse guide and command help. The bundled proxy preserves the external user-data directory adaptation. Review the Existing Project META.tags sample limitation before relying on imported classifications.
+
 ## Install and use
 
-1. Download the [English/Chinese skill ZIP v2026.11.12](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/download/v2026.11.12/ai-command-engine-skill_v2026.11.12_en-zh.zip) from the [release page](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/tag/v2026.11.12). Install the complete `ai-command-engine/` folder in your AI tool's skills directory. Preserve the entry points, `references/`, `scripts/`, package files, `VERSION`, and `LICENSE`.
+1. Download the [English/Chinese skill ZIP v2026.11.12.5](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/download/v2026.11.12.5/ai-command-engine-skill_v2026.11.12.5_en-zh.zip) from the [release page](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/tag/v2026.11.12.5). Install the complete `ai-command-engine/` folder in your AI tool's skills directory. Preserve the entry points, `references/`, `scripts/`, package files, `VERSION`, and `LICENSE`.
 2. Use Node.js >=20.17.0 and run `npm ci --omit=dev` in the skill root. The complete plugin source and plugin build dependencies are not required.
 3. Ask the AI to read the skill and follow [Connection and Environment](ai-command-engine/references/setup.md), running `scripts/start-proxy.ps1` to start the proxy hidden on Windows.
-4. Install the companion `.eext` v0.20.136 in EDA and allow external interaction. The plugin discovers a compatible proxy automatically. Verify the intended connection with read-only `project.getInfo` before editing.
+4. Install the companion `.eext` v0.21.2 in EDA and allow external interaction. The plugin discovers a compatible proxy automatically. Verify the intended connection with read-only `project.getInfo` before editing.
 
-Version 2026.11.12 selects an available proxy port from `49720–49729`; the extension discovers a compatible proxy in that range. The Windows launcher returns its actual `baseUrl`. Explicit port selection remains pinned to that port.
+Version 2026.11.12.5 selects an available proxy port from `49720–49729`; the extension discovers a compatible proxy in that range. The Windows launcher returns its actual `baseUrl`. Explicit port selection remains pinned to that port.
 
 Proxy user data stays outside the skill folder. Updating the skill does not overwrite credentials or backups. A compatible running proxy is reused with its existing data directory, without a forced restart. Installing the runtime dependency initially requires network access; ordinary drawing does not require SMT credentials.
 

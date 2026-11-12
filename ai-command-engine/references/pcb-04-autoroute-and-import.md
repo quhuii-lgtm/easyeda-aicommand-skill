@@ -32,6 +32,8 @@ Deduplication of existing ARC polylines occurs only when the corresponding sourc
 
 Do not start another autoroute while an existing task is running or has unknown status. Query or stop it according to current help; do not assume it was cancelled.
 
+Retry only when an explicit connection check confirms the start request was not sent. If the request was submitted, timed out after partial progress, or its response is unknown, keep this operation's marker and query or stop it first; do not start a duplicate job. This is a handling rule, not a claim that the failure was reproduced in EDA.
+
 ## DSN/SES autorouting
 
 The flow is DSN export, service start, status polling, SES retrieval, import-condition checks, SES import, and independent PCB checks. Confirm parameters at each step. Keep the `jobId` from `pcb.autoRouteStart`; poll with `pcb.autoRouteStatus {jobId}`. After `COMPLETED`, call `pcb.autoRouteGetResult {jobId}` for `fileName` and `base64`. Status polling may clear the recent task, so retrieval must explicitly pass `jobId`.

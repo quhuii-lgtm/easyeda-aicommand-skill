@@ -79,11 +79,14 @@ Commands that register tasks return a `taskId`. If the same task is still runnin
 - Serialize writes per window. Long-running commands that support progress extend their deadline when valid progress arrives; connection ping/pong does not prove task progress.
 - After reconnecting, reloading, or stopping and restarting, check the instance, project, and document again. An instance ID may stay the same or change.
 - If the current request's result is unknown, stop dependent steps. An independently confirmed failure that has ended does not need a manual unlock.
+- With the 0.21.1 extension, if reconnect remains waiting after a proxy restart, confirm that no operation is in flight, then save and reopen the EDA window. Never use reopening to clear protection for an unknown write.
+- If Stop or Reconnect is waiting after a proxy restart, the client applies the latest intent after confirming the old connection is invalid and no real operation is in flight. Start resumes on the current connection.
+- If an operation is still in flight or a write result is unknown, inspect the operation and target state. Keep the existing connection and write protection; do not resend automatically.
 
 ## Upgrade and Connection Troubleshooting
 
 Before upgrading, finish known operations and save. If a write is still unknown, inspect the current state first. After updating the extension and matching proxy, check the running process path, start time, and connected version.
 
-The plugin health probe scans ports `49720–49729`. The local forwarding layer may wrap a connection failure in HTTP 500; it accepts only the matching proxy health identity. The skill launcher checks the same range before starting another process. Preserve other services and use the returned `baseUrl` for follow-up requests.
+The plugin health probe scans ports `49720–49729`. The local forwarding layer may wrap a connection failure in HTTP 500; it accepts only the matching proxy health identity. The skill launcher checks the same range before starting another process. For module-library commands, it also requires `moduleLibraryProtocol:1`; an older proxy is skipped and is not stopped. Update the companion skill and extension together to use the merged module features. This checks the proxy capability advertised by its health response, not an EDA or project-file version. Preserve other services and use the returned `baseUrl` for follow-up requests.
 
 Background timer throttling can delay timers; timer delay alone does not prove a disconnection. Only handle an old connection or exit an old process after confirming there are no in-flight tasks and completing a connection probe.

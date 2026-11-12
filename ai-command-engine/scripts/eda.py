@@ -33,7 +33,7 @@ def _find_proxy():
         except Exception as error:
             failures.append(f'{base}: {error}')
             continue
-        if isinstance(info, dict) and info.get('ok') is True and info.get('service') == 'ai-command-proxy' and info.get('lifecycleProtocol') == 1:
+        if isinstance(info, dict) and info.get('ok') is True and info.get('service') == 'ai-command-proxy' and info.get('lifecycleProtocol') == 1 and info.get('moduleLibraryProtocol') == 1:
             return base, info
         failures.append(f'{base}: incompatible health response')
     message = 'No compatible AI Command Proxy was found.'

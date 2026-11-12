@@ -65,6 +65,7 @@ Before the first PCB write, read these guides in order, then follow the steps in
 | Draw or edit a PCB | Follow the six stages above. Each stage includes a command index. |
 | Projects, boards, sheets, and backups | [Project and Sheet Commands](references/commands-project.md) |
 | Query or maintain symbols, footprints, and devices | [Library Commands](references/commands-lib.md) |
+| Extract, restore, or compose a reusable module | Follow [Reuse a Module](references/module-reuse.md) in order; query `__help` for command parameters. |
 | Rule knowledge, trace-width estimates, and parts queries | [Knowledge and Parts](references/commands-knowledge.md) |
 | Fabrication outputs, BOM, and coordinate files | [Manufacturing File Requirements](references/manufacturing-file-requirements.md) |
 | Properties, labels, netlists, and save issues | [Operational Risks](references/pitfalls.md) |

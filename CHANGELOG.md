@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.12.5
+
+- Update integrated module-reuse and proxy-recovery usage guidance.
+
 ## 2026.11.12
 
 - Updated PCB grouping recovery and operation-bound auto-route task recovery guidance.

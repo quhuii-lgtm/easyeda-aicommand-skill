@@ -65,6 +65,7 @@ description: 通过本地 HTTP 指令查询、绘制、修改和检查嘉立创 
 | PCB 绘制与修改 | 按上方六阶段指南执行，命令索引在各阶段内。 |
 | 工程、板子、图页管理和备份 | [工程与图页指令](references/zh/commands-project.md) |
 | 查询或维护符号、封装和器件 | [器件库指令](references/zh/commands-lib.md) |
+| 提取、恢复或组合可复用模块 | 按[模块复用](references/zh/module-reuse.md)顺序执行；参数先查目标窗口的 `__help`。 |
 | 规则知识、线宽估算和物料查询 | [知识与物料指令](references/zh/commands-knowledge.md) |
 | 制造文件、BOM和坐标文件 | [生产文件操作要求](references/zh/manufacturing-file-requirements.md) |
 | 属性、标签、网表、保存异常 | [问题排查](references/zh/pitfalls.md) |
