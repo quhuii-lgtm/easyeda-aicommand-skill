@@ -90,15 +90,24 @@
 ## 分组和移动前后核对
 
 - `pcb.moveComponent` 后核对位置、角度、面和锁定状态。`pcb.checkPlacement` 基于可读取的焊盘边界，跳过或不支持的对象不能当成布局通过。
-- `pcb.groupBySchematicRegions` 仅在已选用分组时执行。先看 `dryRun`、板框容纳情况和尺寸来源，核对保留范围后执行并读回；未选用不把分组当布局验收条件。
+- 原理图导入/更新已读回且来源可核对时，分别询问是否标记功能区或移动器件分组。沿用明确选择；未获授权不执行。详见[可选功能与提示时机](pcb-01-read-board-and-rules.md#可选功能与提示时机)。
 
-## 从 AI 指令引擎菜单分组
+## 标记和定位原理图功能区
 
-在 PCB 页打开「AI 指令引擎」菜单。先连接配套代理，菜单与 AI 指令共用当前窗口的命令队列。
+这些指令使用当前 PCB 所关联原理图中的功能框，只标记或定位/高亮功能区，不移动器件。
 
-- 按原理图功能区分组时，先核对预览中的组、器件和提示。确认后先备份 PCB，再移动器件并生成组框和名称，读回后保存。已有走线保持原位，适合布线前使用。
-- 切换 PCB 或预览过期时，重新核对当前板并重新预览。结果未知时先检查实际状态。
-- 分组写后恢复未确认时，返回 `error.cause.partial:true` 并附备份 ID。先核对原 PCB 的实际状态，再决定后续操作。宏即使设为失败后继续，也会停止依赖写入。
+1. 打开目标 PCB，调用 `pcb.getSchematicRegions` 读取功能区成员和未匹配对象；核对时包含锁定成员。
+2. 调用默认 `dryRun:true` 的 `pcb.markSchematicRegions` 预览标记，并检查功能区和成员。
+3. 只有用户明确同意后，才用 `dryRun:false` 调用 `pcb.markSchematicRegions` 执行。读回结果，再保存、关闭、重开并核对标记。
+4. 用 `pcb.locateSchematicRegion(regionId)` 定位/高亮功能区。此指令不写入设计数据。
+
+菜单项为“标记功能区（不移动元件）…”和“定位／高亮功能区…”。这与会移动器件的 `pcb.groupBySchematicRegions` 分开；不要默认调用。完整参数和回包以 `__help` 为准。
+
+## 移动器件分组
+
+`pcb.groupBySchematicRegions` 会移动器件并创建分组。仅在用户明确选择移动器件分组后使用，并先核对预览、板框容纳情况和影响；这不是上面的功能区标记流程。分组写后恢复未确认时，错误会带 `cause.partial:true` 和备份 ID。继续前先检查原 PCB 的实际状态。宏即使设置为普通错误后继续，也会停止依赖写入。
+
+PCB 有变化或预览过期时，重新核对当前板并重新预览。结果未知时先检查实际状态。
 
 ## 布线前检查布局
 
@@ -110,5 +119,6 @@
 
 | 任务 | 命令 | 用途 |
 | --- | --- | --- |
+| 原理图功能区标记和高亮 | `pcb.getSchematicRegions`、`pcb.markSchematicRegions`、`pcb.locateSchematicRegion` | 读取功能区成员；预览标记（默认 `dryRun:true`）；明确授权后执行（`dryRun:false`）；或只定位/高亮，不写设计数据。 |
 | 摆放与板框 | `pcb.moveComponent`、`pcb.checkPlacement`、`pcb.drawOutline` | 移动器件、检查布局间距和建立板框。 |
-| 分组和恢复 | `pcb.groupBySchematicRegions`, `pcb.sourceRollback` | 先预览分组。恢复前核对目标及备份。 |
+| 移动器件分组和恢复 | `pcb.groupBySchematicRegions`, `pcb.sourceRollback` | 仅在明确选择后移动器件创建分组；恢复前核对目标及备份。 |

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.13.4
+
+- Updated effective Device verification and separate region marking/navigation workflows.
+
 ## 2026.11.12.5
 
 - Update integrated module-reuse and proxy-recovery usage guidance.

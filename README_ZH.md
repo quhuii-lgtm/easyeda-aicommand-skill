@@ -2,7 +2,7 @@
 
 [English](README.md)
 
-本仓库发布完整中英文 AI Command Engine 技能 2026.11.12.5，包含插件 0.21.2 配套的统一代理。Windows / 嘉立创 EDA 专业版 4.1.99 已验证空闲代理恢复、正常 Stop/Start 和只读数据一致性。模块复用主路径和样本限制详见对应指南。
+完整中英文 AI Command Engine 技能 2026.11.13.4，配套插件 0.21.6。按 Device 换件与 PCB 功能区指南操作；Windows / EDA4.1.99 实测覆盖双脚同封装不同 Device 换件和功能区标记定位。
 
 中英文指南涵盖 A4 预排、直连默认 40 格及支路例外审批、折弯和布线候选、跨页连接、替代器件、TEXT 重开复验。
 
@@ -12,12 +12,12 @@
 
 ## 安装与使用
 
-1. 从[技能 2026.11.12.5 发布页](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/tag/v2026.11.12.5)下载[中英双语 ZIP](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/download/v2026.11.12.5/ai-command-engine-skill_v2026.11.12.5_en-zh.zip)，将完整 `ai-command-engine/` 安装到 AI 工具的技能目录。保留入口、`references/`、`scripts/`、依赖文件、`VERSION` 和 `LICENSE`。
+1. 从[技能 2026.11.13.4 发布页](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/tag/v2026.11.13.4)下载[中英双语 ZIP](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/download/v2026.11.13.4/ai-command-engine-skill_v2026.11.13.4_en-zh.zip)，将完整 `ai-command-engine/` 安装到 AI 工具的技能目录。保留入口、`references/`、`scripts/`、依赖文件、`VERSION` 和 `LICENSE`。
 2. 使用 Node.js >=20.17.0，在技能根目录运行 `npm ci --omit=dev`。无需下载或构建完整插件源码。
 3. 让 AI 阅读技能并按[连接说明](ai-command-engine/references/zh/setup.md)运行 `scripts/start-proxy.ps1`，在 Windows 隐藏后台启动代理。
-4. 从[插件 v0.21.2 发布页](https://github.com/quhuii-lgtm/easyeda-aicommand/releases/tag/v0.21.2)安装配套 `.eext` 并允许外部交互。插件自动发现兼容代理；开始修改前用只读 `project.getInfo` 核对目标连接。
+4. 从[插件 v0.21.6 发布页](https://github.com/quhuii-lgtm/easyeda-aicommand/releases/tag/v0.21.6)安装配套 `.eext` 并允许外部交互。插件自动发现兼容代理；开始修改前用只读 `project.getInfo` 核对目标连接。
 
-2026.11.12.5 会在 `49720–49729` 中选择可用端口，插件扫描同一范围发现兼容代理。Windows 启动器会返回实际 `baseUrl`；显式指定端口时只使用该端口。
+2026.11.13.4 会在 `49720–49729` 中选择可用端口，插件扫描同一范围发现兼容代理。Windows 启动器会返回实际 `baseUrl`；显式指定端口时只使用该端口。
 
 代理数据保存在技能目录外。更新技能不覆盖凭据与备份；已有兼容代理继续使用原数据目录，不强行重启。Node运行依赖首次安装需要联网，正常绘图不要求SMT密钥。
 

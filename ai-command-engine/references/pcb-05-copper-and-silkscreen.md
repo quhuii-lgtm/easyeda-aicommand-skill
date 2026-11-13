@@ -13,6 +13,7 @@ Use `__help` in the target window for parameters, defaults, results, and example
 
 ## Silkscreen and Interface Markings
 
+- Canvas-layer display colors are available through `pcb.getSilkscreenColors` and `pcb.setSilkscreenColor`. `side` accepts `top`, `bottom`, or `both` and defaults to `top`; `color` uses `#RRGGBB`. This changes display colors only, not manufacturing or 3D colors; it does not save automatically. Read back with `pcb.getSilkscreenColors` to confirm. Check `__help` for full parameters and results.
 - Inspect standalone text, component designators, and markings inside footprints separately.
 - Check text height, stroke width, and minimum spacing for the actual process.
 - After enlarging text, recheck its clearance from pads, solder-mask openings, board edge, and adjacent text.
@@ -29,6 +30,8 @@ Use `pcb.modifyComponentAttribute` to adjust designator position, angle, font, o
 
 `pcb.checkSilkscreen` is read-only and checks text, designators, available package silkscreen, pad openings, and board edge. Judge manufacturing-geometry conflicts separately from source-object candidates. Report unique-source attribution, ambiguous matches, and uncovered primitives as returned; a candidate is not a confirmed conflict. See [PCB special topics](pcb-05-copper-and-silkscreen.md) for parameters and coverage.
 
+The API changes the active layer color; the inactive color keeps its existing EDA setting.
+
 ## Silkscreen spacing
 
 `pcb.checkSilkscreen` separately checks readable silkscreen objects in the current PCB and manufacturing output. Use current help for scope, parameters, and response. SDK sources may include lines, arcs, and polylines. Distinguish package-local geometry from board-level objects; do not present a local primitive ID as a board-level SDK ID.
@@ -41,6 +44,7 @@ Manufacturing analysis parses supported Gerber layers and reports side, category
 
 | Task | Commands | Purpose |
 | --- | --- | --- |
+| Canvas silkscreen display color | `pcb.getSilkscreenColors`, `pcb.setSilkscreenColor` | Read or set top/bottom/both canvas display colors; does not change manufacturing or 3D colors or save automatically. Read back to confirm. |
 | Designators and silkscreen | `pcb.modifyComponentAttribute`, `pcb.checkSilkscreen` | Change a designator attribute or inspect silkscreen candidates. Renaming does not renumber; silkscreen results may be incomplete and candidates are not confirmed collisions. |
 | Copper pours | `pcb.pourCopper`, `pcb.listPours`, `pcb.rebuildPour` | Create, inspect, or rebuild pours. `pourCopper` creates only a boundary; rebuild and read back fill. `no-fill` does not mean a completed pour. |
 | Copper, text, and silkscreen | `pcb.getAutoCopperPlan`, `pcb.autoCopper`, `pcb.getPourFillReadback`, `pcb.getNetSilkscreenPlan`, `pcb.generateNetSilkscreen`, `pcb.listStrings`, `pcb.placeString`, `pcb.modifyString`, `pcb.modifyPour` | Inspect the plan or target first and read back after writes. |

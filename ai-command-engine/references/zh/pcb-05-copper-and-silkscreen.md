@@ -19,6 +19,7 @@
 
 ## 丝印和接口标识
 
+- 画布整层显示色可用 `pcb.getSilkscreenColors` 读取、用 `pcb.setSilkscreenColor` 设置。`side` 可选 `top`、`bottom`、`both`，默认 `top`；`color` 使用 `#RRGGBB`。此设置只改显示色，不改生产或 3D 颜色，也不会自动保存。调用 `pcb.getSilkscreenColors` 读回确认；完整参数和回包以 `__help` 为准。
 - 分别检查独立文字、器件位号和封装内标识。
 - 按实际工艺检查字高、笔画宽度和最小间距。
 - 放大文字后，重新检查文字与焊盘、阻焊开窗、板边和相邻文字的间距。
@@ -51,6 +52,8 @@
 
 网络丝印只是文字对象。核对目标焊盘网络、文字层、旋转和底层镜像，并在执行后检查与焊盘、板框和其他文字的视觉间距。
 
+官方接口修改图层激活时的显示色；非激活暗色保持 EDA 设置。
+
 ## 丝印间距检查
 
 `pcb.checkSilkscreen` 分别检查当前 PCB 中可读的丝印对象和制造输出。检查范围、参数和返回字段以当前帮助为准。SDK 来源可能包含直线、圆弧、Polyline；封装局部几何和板级对象的来源身份应区分，不要将局部图元 ID 冒充板级 SDK ID。
@@ -63,6 +66,7 @@ SDK 候选检查会把同面丝印文字、位号、线、弧、Polyline 和焊�
 
 | 任务 | 命令 | 用途 |
 | --- | --- | --- |
+| 画布丝印显示色 | `pcb.getSilkscreenColors`、`pcb.setSilkscreenColor` | 读取或设置顶面、底面或双面画布显示色；不改生产或 3D 颜色，不自动保存；设置后读回确认。 |
 | 位号与丝印 | `pcb.modifyComponentAttribute`、`pcb.checkSilkscreen` | 调整位号属性或检查丝印候选。位号修改不重新编号；丝印结果可能不完整，候选不等于已确认碰撞。 |
 | 覆铜 | `pcb.pourCopper`、`pcb.listPours`、`pcb.rebuildPour` | 创建、查看和重建覆铜。`pourCopper` 只建立边界，需重建并读回填充结果；`no-fill` 不表示铺铜完成。 |
 | 铜形、文字与丝印 | `pcb.getAutoCopperPlan`, `pcb.autoCopper`, `pcb.getPourFillReadback`, `pcb.getNetSilkscreenPlan`, `pcb.generateNetSilkscreen`, `pcb.listStrings`, `pcb.placeString`, `pcb.modifyString`, `pcb.modifyPour` | 先检查计划或目标，写入后核对。 |

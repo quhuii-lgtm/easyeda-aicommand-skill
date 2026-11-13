@@ -70,20 +70,29 @@ Use `pcb.modifyComponentAttribute` for designator position, angle, font, or visi
 ## Check grouping and movement
 
 - After `pcb.moveComponent`, verify position, angle, side, and lock state. `pcb.checkPlacement` uses readable pad boundaries; skipped or unsupported objects do not count as a pass.
-- When schematic import/update has been read back and sources are verifiable, offer grouping by functional region if the user has not already chosen. Reuse an explicit choice; do not execute without a reply. If selected, review `dryRun`, board fit, and size sources before execution. See [optional tool offer rules](pcb-01-read-board-and-rules.md#pcb-optional-tools).
+- When schematic import/update has been read back and sources are verifiable, offer functional-region marking and component-moving groups as separate optional choices. Reuse explicit choices; do not execute either without authorization. See [optional tool offer rules](pcb-01-read-board-and-rules.md#pcb-optional-tools).
 
-## PCB grouping from the AI Command Engine menu
+## Mark and locate schematic functional regions
 
-If recovery after a grouping write cannot be verified, the error carries `cause.partial:true` and a backup ID. Inspect the original PCB before continuing. Macros stop dependent writes even when configured to continue after ordinary errors.
+These commands use functional frames in the schematic associated with the current PCB. They mark regions or locate/highlight them without moving components.
 
-On an active PCB page, open the AI Command Engine menu after connecting the companion proxy. The menu and AI requests use the same command queue for the window.
+1. Open the target PCB and call `pcb.getSchematicRegions` to read region members and unmatched objects. Include locked members in the review.
+2. Call `pcb.markSchematicRegions` with the default `dryRun:true` to preview the marks. Check the regions and members before deciding.
+3. Only after explicit authorization, call `pcb.markSchematicRegions` with `dryRun:false`. Read back the result, then save, close, reopen, and verify the marks.
+4. Use `pcb.locateSchematicRegion(regionId)` to locate/highlight a region. This command does not write design data.
 
-- For grouping by schematic regions, review the groups, components, and warnings before confirming. The tool backs up the PCB before moving components and adding group outlines and labels. It reads back the result and saves the board. Existing tracks stay in place, so use this before routing.
-- If the PCB changes or the preview becomes stale, check the active board and preview it again. Check actual state when an operation's outcome is unknown.
+The menu entries are **Mark Functional Regions (No Component Movement)…** and **Locate/Highlight Functional Region…**. They are separate from `pcb.groupBySchematicRegions`, which moves components; do not call that command by default. Check `__help` for complete parameters and results.
+
+## Component-moving groups
+
+`pcb.groupBySchematicRegions` moves components and creates groups. Use it only when the user explicitly selects component-moving groups, after reviewing the preview, fit, and impact; it is not the functional-region marking workflow above. If recovery after a grouping write cannot be verified, the error carries `cause.partial:true` and a backup ID. Inspect the original PCB before continuing. Macros stop dependent writes even when configured to continue after ordinary errors.
+
+If the PCB changes or a preview becomes stale, check the active board and preview again. When an operation's outcome is unknown, inspect the actual state before continuing.
 
 ## Command index
 
 | Task | Commands | Purpose |
 | --- | --- | --- |
+| Schematic region marks and highlighting | `pcb.getSchematicRegions`, `pcb.markSchematicRegions`, `pcb.locateSchematicRegion` | Read region members, preview marks (`dryRun:true` by default), explicitly execute marks (`dryRun:false`), or locate/highlight without writing design data. |
 | Placement and outline | `pcb.moveComponent`, `pcb.checkPlacement`, `pcb.drawOutline` | Move components, check spacing, and create the board outline. |
-| Grouping and recovery | `pcb.groupBySchematicRegions`, `pcb.sourceRollback` | Preview groups. Verify the target and backup before recovery. |
+| Component-moving groups and recovery | `pcb.groupBySchematicRegions`, `pcb.sourceRollback` | Move components to create groups only when explicitly selected. Verify the target and backup before recovery. |
