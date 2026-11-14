@@ -68,6 +68,8 @@ Use a read-only plan, execute that exact plan, then read back for fanout, local 
 
 Pass the complete plan `data` unchanged as `params.plan`. Do not edit or reconstruct its fields. Check created objects, nets, layers, and geometry after execution. If partially failed, preserve created objects and inspect the board; do not replay the old plan. These commands do not run whole-board DRC, save, or manufacturing acceptance. Confirm persistence by saving and reopening when required. Copper operations share an SDK timeout; a timeout does not cancel the host operation. If the result is unknown, stop dependent writes and do not repeat it.
 
+For fanout plans, `coverage.geometryReview.readCounts` reports SDK getter read counts, not complete source coverage. Review `coverage.geometryReview.warnings`, `coverage.geometryReview.unknown`, and `coverage.geometryReview.status` for local completeness; plan coverage does not replace DRC. PAD geometry in plans reflects SDK getter precision and does not establish source precision. After fanout, read back each created line and via by its individual ID.
+
 | Operation | Plan → execute | Scope |
 | --- | --- | --- |
 | Fine-pitch fanout | `pcb.getFanoutPlan` → `pcb.fanout` | Routes target pads to escape vias; does not complete the whole net. |

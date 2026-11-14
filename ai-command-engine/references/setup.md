@@ -68,6 +68,8 @@ Read the actual canvas size with `schematic.getPageInfo`; read the actual board 
 
 `schematic.*` and `pcb.*` accept optional `__docUuid`. If supplied, it must be a non-empty string matching the focused page; omitting it operates on the currently identified page. A target-type or identity mismatch is rejected before the handler starts. The command does not switch pages implicitly, and this check does not guarantee the page stays unchanged during execution.
 
+Registry commands can optionally receive `__projectUuid` alongside `__docUuid` and/or `__tabId`. When supplied, the project UUID must match the current page's `parentProjectUuid`; older calls may omit it. These fields check the target only and never switch pages. After reconnecting, reread the instance, project, and document before registry operations.
+
 `_timeoutMs` sets the command wait budget. Invalid values or values beyond the runtime timer range are rejected; values below one second are treated as one second. Each macro step uses its own budget.
 
 Commands that register tasks return a `taskId`. If the same task is still running, the response may include `alreadyRunning:true`; use `task.get` to check status or retrieve its result instead of resending changed parameters blindly. Completed tasks do not hold a long-term write lock. Deduplication and routing behavior vary by version; consult help on the target plugin.
@@ -77,7 +79,7 @@ Commands that register tasks return a `taskId`. If the same task is still runnin
 - A client timeout does not cancel the underlying operation. Check `task.list`, `task.get`, and the target content before deciding what to do next.
 - Inspect `error.message`, `partial`, failed items, and unprocessed items. Do not treat partial success as batch completion.
 - Serialize writes per window. Long-running commands that support progress extend their deadline when valid progress arrives; connection ping/pong does not prove task progress.
-- After reconnecting, reloading, or stopping and restarting, check the instance, project, and document again. An instance ID may stay the same or change.
+- After reconnecting, reloading, or stopping and restarting, reread the instance, project, and document. Do not rely on old identity values; an instance ID may stay the same or change.
 - If the current request's result is unknown, stop dependent steps. An independently confirmed failure that has ended does not need a manual unlock.
 - With the 0.21.1 extension, if reconnect remains waiting after a proxy restart, confirm that no operation is in flight, then save and reopen the EDA window. Never use reopening to clear protection for an unknown write.
 - If Stop or Reconnect is waiting after a proxy restart, the client applies the latest intent after confirming the old connection is invalid and no real operation is in flight. Start resumes on the current connection.

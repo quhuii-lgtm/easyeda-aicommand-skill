@@ -86,6 +86,8 @@
 
 把计划命令返回的完整 `data` 原样放入执行命令的 `params.plan`。不要删改或重新拼装计划字段。执行后按结果核对新增对象及其网络、图层和几何。部分失败时保留已写对象并检查当前图纸，不要重放旧计划；命令不会自动完成整板 DRC、保存或制造验收。需要持久性确认时，按任务要求保存并关闭重开读回。
 
+扇出计划的 `coverage.geometryReview.readCounts` 表示 SDK getter 的读取数量，不代表源覆盖完整。结合 `coverage.geometryReview.warnings`、`coverage.geometryReview.unknown` 和 `coverage.geometryReview.status` 判断局部完整性；计划覆盖不能代替 DRC。计划中的 PAD 几何精度来自 SDK getter，不证明源精度。扇出后按每条新导线和每个新过孔的 ID 分别读回核对。
+
 铜区操作受共享 SDK 调用时限约束。超时不表示宿主操作已取消；结果不明时停止依赖该写入，不启动相关写入或重复执行。
 
 | 操作 | 计划命令 → 执行命令 | 判读要点 |

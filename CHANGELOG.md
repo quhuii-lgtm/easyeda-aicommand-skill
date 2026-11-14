@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.14.1
+
+- Design rules, native DRC, outline zoom, fanout verification and single-PCB restore workflows.
+
 ## 2026.11.13.4
 
 - Updated effective Device verification and separate region marking/navigation workflows.

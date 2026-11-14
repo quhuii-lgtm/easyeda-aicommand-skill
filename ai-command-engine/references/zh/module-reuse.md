@@ -6,7 +6,7 @@
 
 1. 确认来源工程、选中对象、目标工程和复用范围。提取设计前调用 `module.captureExtractionSource`。
 2. 调用 `module.extractModuleArchive` 提取，并填写 `workcard.newModule.localId`、`workcard.newModule.version` 和所需名称。提取成功后会自动保存到模块库。可选的 `libraryDirectory` 只覆盖本次提取的保存目录。若保存失败，保留提取结果，只重试 `module.librarySave`，不要重复设计操作。
-3. 用 `module.libraryList` 或 `module.librarySearch` 查找模块，用 `module.libraryGet` 查看，再用 `module.restoreFile` 恢复源文件。
+3. 用 `module.libraryList` 或 `module.librarySearch` 查找模块，用 `module.libraryGet` 查看，再用 `module.restoreFile` 合并导入归档。此流程只核对导入元数据，`contentVerified:false`，不是整工程原样覆盖恢复。
 4. 复用原理图时，调用 `module.placeSchematicPage` 放置图页；需要时调用 `module.alignTemplatePcb` 对齐 PCB 模板；然后用 `module.mapInstanceNets` 映射网络。读回器件实例和网表。重复业务指令若返回 `unknown`、`partial` 或 `pending-verification`，按失败处理；先用对应的 `module.get*Operation` 查询原记录，再决定下一步。
 5. 组合 PCB 时，先调用 `module.preparePcbComposition`，再调用 `module.composePcbInstance`。结果不确定时先查 `module.getPcbCompositionOperation`，再决定下一步。
 6. 替换器件前，确认候选器件、封装和引脚映射。取得用户同意后，调用 `module.prepareReplacement` 和 `module.executeReplacement`。结果不确定或超时时，先查询 `module.getReplacementOperation`，不要盲目重试。超时会停止后续换件写入，但无法撤回已经发送给 EDA 的操作。

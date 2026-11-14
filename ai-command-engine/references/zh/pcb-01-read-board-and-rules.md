@@ -145,13 +145,18 @@ S 表示信号，G 表示地，P 表示电源。
 
 ### 网络类与网络规则
 
+按本轮授权更新规则与现有网络/网络类绑定。先调用 `pcb.getDesignRules`，查看原结构和单位。用默认 `dryRun:true` 的 `pcb.updateDesignRules` 预览；预览符合已授权的修改要求后，再设 `dryRun:false` 执行。只修改 `configuration.config` 内明确指定的字段；外层 `name` 是宿主元数据，不可指定或写入。网络/网络类绑定只更新现有条目，保留其身份。网络类分配会同步成员，预览逐条列出受影响项；同批对单个网络的明确指定优先。写后读回规则；保存、关闭并重开 PCB，才能确认持久性。结果不明时停止依赖操作，先检查当前规则。参数和字段以 `__help` 为准。
+
+`Track:"default"` 表示跟随默认方案。宿主保存时可能把指向当前默认方案名称的绑定转成 `default`。不能保证以后切换默认方案时仍固定绑定原名称。`verified` 只确认即时读回，持久性须保存重开核对。
+
 | 命令 | 用途 |
 | --- | --- |
+| `pcb.getDesignRules`、`pcb.updateDesignRules` | 读取或更新设计规则；按上面的预览和读回流程操作。 |
 | `pcb.createNetClass`、`pcb.renameNetClass`、`pcb.deleteNetClass` | 建立、改名或删除网络类。 |
 | `pcb.listNetClasses` | 查看网络类。 |
 | `pcb.addNetToClass` | 将网络加入网络类；删除成员按当前帮助确认对应命令。 |
 | `pcb.createDiffPair`、`pcb.listDiffPairs` | 建立或查看差分对；删除命令按当前帮助确认。 |
-| `pcb.getNetRules` | 只读查看网络规则，例如线宽和间距；当前不提供规则写入。 |
+| `pcb.getNetRules` | 只读查看网络规则，例如线宽和间距。 |
 | `pcb.getNetLength`、`pcb.getNetInfo`、`pcb.getNetPrimitives` | 查看网络长度、详情和网络图元。 |
 | `pcb.highlightNet` | 高亮或取消高亮网络，辅助定位。 |
 
@@ -166,6 +171,7 @@ S 表示信号，G 表示地，P 表示电源。
 | 任务 | 命令 | 用途 |
 | --- | --- | --- |
 | 查看现状 | `pcb.listComponents`、`pcb.getComponentPads`、`pcb.listNets`、`pcb.listLayers` | 查看器件、焊盘、网络和图层。 |
+| 设计规则 | `pcb.getDesignRules`、`pcb.updateDesignRules` | 仅更新 `configuration.config` 内指定字段；外层 `name` 是宿主元数据。先预览，保留现有绑定并在写后读回。 |
 | 网络类、差分与等长组 | `pcb.createDiffPair`、`pcb.listDiffPairs`、`pcb.deleteDiffPair`、`pcb.createNetClass`、`pcb.listNetClasses`、`pcb.addNetToClass`、`pcb.removeNetFromClass`、`pcb.deleteNetClass`、`pcb.renameNetClass`、`pcb.createEqualLengthGroup`、`pcb.listEqualLengthGroups`、`pcb.renameEqualLengthGroup`、`pcb.deleteEqualLengthGroup`、`pcb.addNetToEqualLengthGroup`、`pcb.removeNetFromEqualLengthGroup` | 管理网络分组、差分对和等长组。删除网络类不承诺恢复此前的网络颜色；修改前确认目标。 |
 | 图层和层叠 | `pcb.getCurrentLayer`、`pcb.selectLayer`、`pcb.setCopperLayers`、`pcb.setLayerVisible`、`pcb.setLayerLocked`、`pcb.listStackingConfigs`、`pcb.getStackingConfig`、`pcb.applyStackingConfig`、`pcb.saveStackingConfig`、`pcb.renameStackingConfig`、`pcb.deleteStackingConfig`、`pcb.setDefaultStackingConfig`、`pcb.addCustomLayer`、`pcb.removeCustomLayer`、`pcb.modifyLayer`、`pcb.setPcbType` | 查询或设置当前层、铜层数、图层和层叠。EDA 4.1.78 已确认 `pcb.getCurrentLayer`、全部层叠配置命令及实时 DRC 命令会拒绝执行，提示需要 EDA 4.2；不要将拒绝视为功能通过。 |
 | 选择与定位 | `pcb.getSelection`、`pcb.select`、`pcb.clearSelection`、`pcb.crossProbe`、`pcb.getPrimitivesInRegion`、`pcb.getPrimitiveAtPoint` | 查询选择、交叉定位或按区域和坐标查找图元。 |

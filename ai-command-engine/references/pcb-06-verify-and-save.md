@@ -15,6 +15,8 @@ Follow the [PCB command workflow](pcb-06-verify-and-save.md) for modification, d
 
 First state PCB, sheet/board number, objects in scope, and acceptance stage. A local task checks only its target and affected interfaces. Use confirmed schematic connectivity, mechanical conditions, critical-net requirements, and manufacturing process.
 
+Use `pcb.zoomToBoardOutline` to fit the board outline with the native PCB view command. It does not move primitives or fall back to zooming all. A successful response confirms SDK success and a consistent target before and after the command; `visualVerified:false` means the visible view still needs visual inspection.
+
 ### Acceptance Items, Methods, and Pass Conditions
 
 | Item | How to check | Pass condition |
@@ -23,7 +25,7 @@ First state PCB, sheet/board number, objects in scope, and acceptance stage. A l
 | Outline, holes/slots, and mechanics | Compare mechanical drawings with outline, holes/slots, component locations/body outlines; inspect top/bottom and applicable 3D/assembly data for height, insertion, mounting, and probe access. | Dimensions, location, and orientation meet confirmed conditions with no body or assembly interference. Pad non-overlap alone is insufficient; report missing required evidence. |
 | Stackup and rules | Read available layers, rules, and physical stackup; compare signal/reference layers, copper/dielectric thickness, and net/layer/region rules. Where unsupported, inspect applicable sources or EDA UI. | Design conditions and affected objects are clear. Layer count/name does not prove physical stackup; unknown values are not replaced with defaults. |
 | Placement and routability | Use actual pads, `checkPlacement`, and current local geometry for functional groups, critical support parts, and exits. Check constrained corridors for the whole trace group, widths, clearances, vias, and all-layer obstacles. | Required local circuits and return paths are reasonably placed with feasible space for affected trace groups. Recheck collision candidates; skipped objects or pad-box approximations are not a complete pass. |
-| Traces, vias, and connectivity | Use `listLines`, `listVias`, `getNetInfo`, `getNetPrimitives`, and applicable DRC to check actual endpoints, net, layer, width, copper/drill, and pad contact; zoom into critical joints. | In-scope connections match intent; whole-board routing has no unresolved required disconnections. Flyline refresh, nonempty IDs, segment counts, or completed autorouter service do not prove connectivity. |
+| Traces, vias, and connectivity | Use `listLines`, `listVias`, `getNetInfo`, `getNetPrimitives`, and applicable DRC to check actual endpoints, net, layer, width, copper/drill, and pad contact; zoom into critical joints. For fanout, `coverage.geometryReview.readCounts` are SDK getter read counts; assess `coverage.geometryReview.warnings`, `coverage.geometryReview.unknown`, and `coverage.geometryReview.status` for local completeness. | In-scope connections match intent; whole-board routing has no unresolved required disconnections. Flyline refresh, nonempty IDs, segment counts, completed autorouter service, or local fanout coverage do not prove connectivity or replace DRC. |
 | Critical electrical paths | Check power paths, sensing, reference plane, returns, layer changes, differential pairs, and length against project/manufacturer requirements; use actual geometry and selected parameters. | Required ampacity/drop/temperature, impedance/timing, and return conditions meet their stated basis. Mark not-applicable items; supplement tool gaps; missing data cannot pass. |
 | Copper and silkscreen | Use `listPours`, `getPourFillReadback`, `checkSilkscreen`, and current top/bottom views to inspect actual copper, openings, designators, polarity, edge, and pin order. | Required copper is filled with correct connectivity/continuity and silkscreen is readable. Boundary-only, `no-fill`, source candidates, or `complete:false` do not prove completion. |
 | DRC and manufacturing | Run `runDrcDetailed` with complete coverage on the final whole-board revision. For manufacturing delivery, use applicable `runDfm`, `runSmtDfm`, and `checkManufacturingProfile`; check manufacturing files and order conditions. | No unresolved errors; remaining warnings are handled per confirmed project decisions. Unsupported, skipped, approximate, and unknown items are checked separately or listed incomplete; do not mask issues by changing rules/default process. |
@@ -31,12 +33,26 @@ First state PCB, sheet/board number, objects in scope, and acceptance stage. A l
 
 Report placement, routing, electrical, mechanical, and manufacturing separately. For local work, mark unperformed whole-board/production checks out of scope, not passed. If required evidence for manufacturing is missing, list it incomplete. Realtime/custom DRC is not a complete check; clearing a marker is not a repair.
 
+### Interpret DRC results
+
+`pcb.runDrc.violations` retains the native result tree. `pcb.runDrcDetailed.violations` lists individual violations, while `rawResult` retains the complete native tree. Counts classify leaf items by severity; unknown items or incomplete returned branches must not be treated as a pass. `passed` only means this API call listed no violations; it does not prove that every rule or manufacturing requirement passed. Check `__help` for fields and parameters.
+
 ### Save and Reopen Scope
 
 - New whole-board work or formal whole-board delivery: after writes and save confirmation, close and reopen the affected PCB. Verify identity, component attributes, pad nets, traces/vias, rules, actual pours, and current view against the pre-close state.
 - Ordinary local changes (position, angle, silkscreen, attributes, added traces, or routine repour): compare the target, affected connections, and non-target content, then save. Do not require reopening the entire project each time.
 - If this delivery deletes/replaces components or existing routes, changes nets or stackup, copies a PCB, or explicitly requires persistence verification: save, reopen the affected PCB, and check the relevant content; do not compare only primitive IDs/counts.
 - If not reopened, report “saved; reopen not verified.” Report “save and reopen verified” only after readback. If write/save status is unknown, first investigate the original operation; do not force-close, replay, or mask uncertainty with another save.
+
+### Restore one PCB from a source backup
+
+Use `pcb.sourceRollback` only for an explicitly authorized full restore of one PCB. `verifyPersistence` defaults to `true`; check `__help` for parameters.
+
+1. Compare the complete restored source with the selected backup.
+2. Confirm the result reports `saved:true`.
+3. Confirm the target PCB page closes, reopen that PCB, and compare the complete source again.
+
+If `saved:false` or the PCB was not reopened and rechecked, do not report a persistent restore. If any result is unknown, stop dependent work and inspect the current PCB. Full-project `module.restoreFile` is a separate merged-import path that remains metadata-only with `contentVerified:false`; it does not prove complete source restoration.
 
 ### Acceptance Result Format
 
@@ -114,7 +130,8 @@ For production delivery, continue with [Manufacturing File Requirements](manufac
 
 | Task | Commands | Purpose |
 | --- | --- | --- |
-| Checks and save | `pcb.runDrc`, `pcb.runDrcDetailed`, `pcb.getNetInfo`, `pcb.save` | Run DRC, inspect a net, and save. A clean DRC alone does not prove manufacturability. |
+| Board view, DRC, and save | `pcb.zoomToBoardOutline`, `pcb.runDrc`, `pcb.runDrcDetailed`, `pcb.getNetInfo`, `pcb.save` | Fit the outline without moving primitives, run DRC, inspect a net, and save. `visualVerified:false` needs visual inspection; a clean DRC alone does not prove full rule or manufacturing acceptance. |
+| PCB source recovery | `pcb.sourceRollback` | Restore one explicitly authorized PCB from a source backup; default `verifyPersistence:true`, compare complete source, confirm save and close, then reopen and compare again. |
 | Manufacturing checks | `pcb.runDfm`, `pcb.runSmtDfm`, `pcb.checkSameNetPadSpacing` | Check PCB process, SMT placement, or same-net pad spacing. Review each command's coverage and unknowns. |
 | Manufacturing output | `pcb.exportGerber`, `pcb.exportPickPlace` | Export Gerber or placement data. Check each output for the current project. |
 | Manufacturing profile, export, and deletion | `pcb.checkManufacturingProfile`, `pcb.exportNetlist`, `pcb.delete` | Verify inputs and targets, then check the delivery scope. |

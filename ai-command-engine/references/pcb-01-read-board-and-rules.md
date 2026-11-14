@@ -112,11 +112,18 @@ Use `pcb.listComponents`, `pcb.getComponentPads`, `pcb.listNets`, and `pcb.listL
 - `pcb.setCopperLayers` sets copper-layer count but does not configure physical stackup. Read back after applying a stackup; a default stackup is not proof it is applied to the current PCB.
 - Use layer names and numbers from current help. Do not guess unknown names; confirm inner layers are available on this board.
 
+## Design rule updates
+
+Update rules and existing network/class bindings within the authorized task scope. First call `pcb.getDesignRules` and inspect the original structure and units. Preview `pcb.updateDesignRules` with its default `dryRun:true`; when the preview matches the authorized change, set `dryRun:false` to execute. Change only specified fields inside `configuration.config`; the outer `name` is host metadata and is not writable. Update bindings only on existing network/class entries and preserve their identities. Assigning a class rule also assigns it to its existing members; the preview lists every affected row, and explicit net changes in the same request take precedence. Read the rules back after writing. Save, close, and reopen the PCB to verify persistence. If the outcome is unknown, stop dependent work and inspect the current rules before proceeding. Check `__help` for parameters and fields.
+
+`Track:"default"` follows the default profile. On save, EDA may convert a binding to the current default profile's name into `default`. Do not promise that this named binding remains fixed after a later default-profile change. `verified` confirms immediate readback; verify persistence after saving and reopening.
+
 ## Command index
 
 | Task | Commands | Purpose |
 | --- | --- | --- |
 | Inspect board | `pcb.listComponents`, `pcb.getComponentPads`, `pcb.listNets`, `pcb.listLayers` | Read components, pads, nets, and layers. |
+| Design rules | `pcb.getDesignRules`, `pcb.updateDesignRules` | Update only selected `configuration.config` fields; outer `name` is host metadata. Preview, preserve existing bindings, and read back after writing. |
 | Net classes and length groups | `pcb.createDiffPair`, `pcb.listDiffPairs`, `pcb.deleteDiffPair`, `pcb.createNetClass`, `pcb.listNetClasses`, `pcb.addNetToClass`, `pcb.removeNetFromClass`, `pcb.deleteNetClass`, `pcb.renameNetClass`, `pcb.createEqualLengthGroup`, `pcb.listEqualLengthGroups`, `pcb.renameEqualLengthGroup`, `pcb.deleteEqualLengthGroup`, `pcb.addNetToEqualLengthGroup`, `pcb.removeNetFromEqualLengthGroup` | Manage net classes, differential pairs, and equal-length groups. Deleting a net class does not guarantee prior net colors are restored. Verify targets before changes. |
 | Layers and stackup | `pcb.getCurrentLayer`, `pcb.selectLayer`, `pcb.setCopperLayers`, `pcb.setLayerVisible`, `pcb.setLayerLocked`, `pcb.listStackingConfigs`, `pcb.getStackingConfig`, `pcb.applyStackingConfig`, `pcb.saveStackingConfig`, `pcb.renameStackingConfig`, `pcb.deleteStackingConfig`, `pcb.setDefaultStackingConfig`, `pcb.addCustomLayer`, `pcb.removeCustomLayer`, `pcb.modifyLayer`, `pcb.setPcbType` | Inspect or set active layer, copper count, layers, and stackup. EDA 4.1.78 rejects `getCurrentLayer`, stackup commands, and real-time DRC commands with an EDA 4.2 requirement. A rejection is not a successful check. |
 | Selection and cross-probe | `pcb.getSelection`, `pcb.select`, `pcb.clearSelection`, `pcb.crossProbe`, `pcb.getPrimitivesInRegion`, `pcb.getPrimitiveAtPoint` | Read or change selection, cross-probe, or locate primitives by region or point. |

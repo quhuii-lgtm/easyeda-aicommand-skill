@@ -13,6 +13,8 @@
 
 先写清PCB、图页/板号、本轮对象和验收阶段；局部任务只验目标及受影响接口。原理图连接表、板框机械条件、关键网络要求及制造工艺以已确认版本为准。
 
+用 `pcb.zoomToBoardOutline` 调用 PCB 原生适应板框视图，不移动图元，也不退回全图缩放。成功回包只确认 SDK 成功且命令前后目标一致；`visualVerified:false` 表示仍需目视核对画面。
+
 ### 验收项目、方法和通过条件
 
 | 项目 | 怎么验 | 通过条件 |
@@ -21,7 +23,7 @@
 | 板框、孔槽与机械 | 对照机械图及实际板框、孔槽、器件位置与外形，查看顶底面及适用的三维/装配资料，检查高度、插拔、固定和测试接触空间。 | 尺寸、位置和朝向满足已确认条件，无本体或装配干涉；仅焊盘不重叠不能判机械通过，缺少必要资料时注明未完成。 |
 | 层叠和规则 | 读当前可用的图层、规则及物理叠层记录，对照信号层、参考面、铜厚、介质及网络/分层/区域规则；接口不支持时用适用资料或界面核对。 | 采用的设计条件明确，实际作用对象正确；铜层数或层名不能代替真实叠层，不以默认参数填补未知。 |
 | 布局与可布线性 | 用真实焊盘、`checkPlacement` 及最新局部图检查功能组、关键配套器件和出口；受限共用通道按线组、线宽、间距、孔和全层障碍核对。 | 必要局部电路和返回路径位置合理，相关线组有可行空间；碰撞候选须复核，工具跳过或焊盘包围盒近似不算完整布局检查。 |
-| 走线、过孔与连通 | 用 `listLines`、`listVias`、`getNetInfo`、`getNetPrimitives` 及适用DRC核对实际端点、网络、层、线宽、铜外径/钻孔和焊盘接触；放大关键接点。 | 本轮连接符合预期；整板布线验收无未处理的必连断路。飞线刷新、非空ID、分段数量或自动布线服务完成均不能代替连通检查。 |
+| 走线、过孔与连通 | 用 `listLines`、`listVias`、`getNetInfo`、`getNetPrimitives` 及适用DRC核对实际端点、网络、层、线宽、铜外径/钻孔和焊盘接触；放大关键接点。扇出中的 `coverage.geometryReview.readCounts` 是 SDK getter 读取数量；结合 `coverage.geometryReview.warnings`、`coverage.geometryReview.unknown` 和 `coverage.geometryReview.status` 判断局部完整性。 | 本轮连接符合预期；整板布线验收无未处理的必连断路。飞线刷新、非空ID、分段数量、自动布线服务完成或局部扇出覆盖均不能代替连通检查或 DRC。 |
 | 关键电气路径 | 按项目及原厂要求逐段核对功率路径、取样、参考面、回流、换层、差分及长度；用实际几何和选定参数计算或核对。 | 必需的载流/压降/温升、阻抗/时序及返回条件满足依据；不适用项注明，工具不能覆盖的内容补查，缺数据不称通过。 |
 | 覆铜与丝印 | 用 `listPours`、`getPourFillReadback`、`checkSilkscreen` 及最新顶底面图核对实际铜面、开窗、位号、极性、板边和针序。 | 需要的铜已填充且连接/连续性正确，丝印清楚可读；边框、no-fill、来源候选或complete:false不能代替已核实结果。 |
 | DRC与制造 | 整板最终版运行 `runDrcDetailed` 并检查完整覆盖；制造交付按实际输入执行 `runDfm`、`runSmtDfm` 及 `checkManufacturingProfile`，核对制造文件和订单条件。 | 无未解决错误，其余告警按项目已确认的方式处理；工具不支持、跳过、近似和unknown逐项补查或列未完成，不改规则或默认工艺掩盖问题。 |
@@ -29,12 +31,26 @@
 
 布局、布线、电气、机械和制造分别给结论。仅布局或局部修改时，尚未开展的整板布线/生产项目注明不在本轮范围，不得顺带报通过；制造交付缺少必要资料则列未完成。实时或自定义DRC不冒充完整检查，清标记不等于修复。
 
+### 判读 DRC 结果
+
+`pcb.runDrc.violations` 保留原生结果树。`pcb.runDrcDetailed.violations` 列出逐条违规，`rawResult` 保留完整原生结果树。统计按叶项区分严重性，未知项或返回分支不完整时不能当作通过。`passed` 只表示本次 API 调用未列出违规，不证明全部规则或制造要求均已通过。字段和参数以 `__help` 为准。
+
 ### 保存与重开范围
 
 - 新绘整板、整板正式交付：写入结束且保存确认后，关闭并重开受影响PCB，核对身份、器件属性、焊盘网络、线路/过孔、规则、实际覆铜及最新图面与保存前一致。
 - 普通局部调整，包括位置、角度、丝印、属性、增补线路或常规重铺铜：核对目标、受影响连接及非目标内容并保存，不因此要求每次重开整个工程。
 - 本轮交付涉及删除/更换器件或既有路由、修改网络或层叠、复制PCB，或明确要求持久性检查时：保存后重开受影响PCB并检查相应内容，不只比较图元ID或数量。
 - 未重开只报告“已保存，未验证重开”；实际读回核对后才报告“保存重开已验证”。写入或保存结果未知时先核实原操作，不强行关闭、重发或用保存掩盖问题。
+
+### 从源备份恢复单个 PCB
+
+`pcb.sourceRollback` 仅用于用户明确授权的单个 PCB 完整恢复。`verifyPersistence` 默认 `true`，参数以 `__help` 为准。
+
+1. 将恢复后的完整源与指定备份比较。
+2. 确认回包为 `saved:true`。
+3. 确认目标 PCB 页已关闭，再重开该 PCB 并再次比较完整源。
+
+若 `saved:false` 或未重开复核，不得报告持久恢复。结果不明时停止依赖操作并检查当前 PCB。整工程 `module.restoreFile` 属于独立的合并导入流程，仍是仅导入 metadata 且 `contentVerified:false`，不能证明完整源已恢复。
 
 ### 验收结果怎么报
 
@@ -123,7 +139,8 @@ EDA 4.1.78 对以下入口有明确的版本保护：`pcb.getCurrentLayer`、`pc
 
 | 任务 | 命令 | 用途 |
 | --- | --- | --- |
-| 检查与保存 | `pcb.runDrc`、`pcb.runDrcDetailed`、`pcb.getNetInfo`、`pcb.save` | 运行 DRC、查询网络并保存。DRC 无错误不能单独证明可生产。 |
+| 板框视图、DRC与保存 | `pcb.zoomToBoardOutline`、`pcb.runDrc`、`pcb.runDrcDetailed`、`pcb.getNetInfo`、`pcb.save` | 原生适应板框且不移动图元，运行 DRC、查询网络并保存。`visualVerified:false` 需目视核对；DRC 无错误不证明规则或制造要求全部通过。 |
+| PCB 源恢复 | `pcb.sourceRollback` | 从源备份恢复一个经明确授权的 PCB；默认 `verifyPersistence:true`，比较完整源、确认保存和关页，再重开并复核。 |
 | 制造工艺 | `pcb.runDfm`、`pcb.runSmtDfm`、`pcb.checkSameNetPadSpacing` | 检查PCB工艺、贴装或同网焊盘间距，分别查看覆盖范围和未确认项。 |
 | 生产输出 | `pcb.exportGerber`、`pcb.exportPickPlace` | 导出 Gerber 或贴片坐标。导出结果需按当前工程另行检查。 |
 | 制造参数、导出与删除 | `pcb.checkManufacturingProfile`, `pcb.exportNetlist`, `pcb.delete` | 核对输入和目标，按交付范围检查。 |

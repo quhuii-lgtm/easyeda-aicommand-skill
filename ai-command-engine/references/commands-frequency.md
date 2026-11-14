@@ -8,6 +8,7 @@ This is a task-based navigation aid, not usage statistics or a verification stat
 | Device lookup | `library.searchDevice`, `library.getDeviceByLcsc` | — | [Library commands](commands-lib.md) |
 | Library management | `lib.symbolSearch`, `lib.symbolGet`, `lib.footprintSearch`, `lib.footprintGet`, `lib.deviceSearch`, `lib.deviceGet`, `lib.deviceGetByLcscIds` | `lib.symbolCreate`, `lib.symbolUpdateSource`, `lib.symbolCopy`, `lib.symbolModify`, `lib.symbolDelete`, `lib.symbolOpenInEditor`, `lib.footprintOpenInEditor`, `lib.footprintCreate`, `lib.footprintGetSource`, `lib.footprintUpdateSource`, `lib.footprintCopy`, `lib.footprintModify`, `lib.footprintDelete`, `lib.deviceCreate`, `lib.deviceCopy`, `lib.deviceModify`, `lib.deviceDelete` | [Library commands](commands-lib.md) |
 | Editor | `editor.openDocument`, `editor.closeDocument`, `editor.screenshot`, `editor.listTabs` | `editor.zoomToAll`, `editor.zoomToRegion` | [Connection and setup](setup.md) |
+| PCB view | `pcb.zoomToBoardOutline` | — | [Verify and Save](pcb-06-verify-and-save.md) |
 | Design rules | `knowledge.query` | `knowledge.listRules`, `knowledge.widthForCurrent` | [Knowledge and parts](commands-knowledge.md) |
 | Long-task recovery | `task.get`, `task.list` | — | [Troubleshooting](pitfalls.md) |
 

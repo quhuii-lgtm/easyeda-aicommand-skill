@@ -10,6 +10,7 @@
 | 简易器件查询 | `library.searchDevice`、`library.getDeviceByLcsc` | — | [器件库指令](commands-lib.md) |
 | 器件库管理 | `lib.symbolSearch`、`lib.symbolGet`、`lib.footprintSearch`、`lib.footprintGet`、`lib.deviceSearch`、`lib.deviceGet`、`lib.deviceGetByLcscIds` | `lib.symbolCreate`、`lib.symbolUpdateSource`、`lib.symbolCopy`、`lib.symbolModify`、`lib.symbolDelete`、`lib.symbolOpenInEditor`、`lib.footprintOpenInEditor`、`lib.footprintCreate`、`lib.footprintGetSource`、`lib.footprintUpdateSource`、`lib.footprintCopy`、`lib.footprintModify`、`lib.footprintDelete`、`lib.deviceCreate`、`lib.deviceCopy`、`lib.deviceModify`、`lib.deviceDelete` | [器件库指令](commands-lib.md) |
 | 编辑器 | `editor.openDocument`、`editor.closeDocument`、`editor.screenshot`、`editor.listTabs` | `editor.zoomToAll`、`editor.zoomToRegion` | [连接与环境](setup.md) |
+| PCB 视图 | `pcb.zoomToBoardOutline` | — | [检查与保存](pcb-06-verify-and-save.md) |
 | 知识规则 | `knowledge.query` | `knowledge.listRules`、`knowledge.widthForCurrent` | [知识与物料指令](commands-knowledge.md) |
 | 长任务恢复 | `task.get`、`task.list` | — | [问题排查](pitfalls.md) |
 
