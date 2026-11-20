@@ -15,6 +15,10 @@ Use the the steps in this stage for edits, deletion, recovery, save, and readbac
 
 ## Compare Before and After
 
+- After movement, rotation, mirroring or substitution, compare actual reference-and-pin to net mappings and part attributes.
+- List branches and actual pins affected by shared-wire edits. Keep unexpected cross-page members in the comparison.
+- After value changes or substitution, compare supplier part number, footprint, BOM inclusion and PCB inclusion. Verify available fields and mark gaps.
+
 Use the the steps in this stage to compare component properties, nets, and positions. A layout-only edit must preserve connections and parameters; each electrical change must map to a requirement. Mark unexplained differences as pending verification.
 
 <a id="schematic-completion-checks"></a>
@@ -73,6 +77,8 @@ Use one concise table. Mark out-of-scope items not applicable and explain why; d
 For the save row, state “Saved; reopen not verified” or “Save and reopen verified” and what was checked. End with an overall conclusion. Any applicable failed item means the overall result fails; any required incomplete item means the overall result cannot be reported as passing.
 
 ## Transfer to PCB
+
+When syncing to an already routed PCB, review existing traces, vias and actual copper in the same task. Capture pre-sync readback and check target pad connections, new ratlines, rules and unrelated changes after import.
 
 - Verify project, board, schematic, target PCB, and assembly revision. In Professional Edition, schematic and PCB synchronization must target the same board.
 - Save before synchronization and inspect the selected items in the change list. If rules must transfer, check “Include Design Rules” and its specific options.

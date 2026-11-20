@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.20.3
+
+- Native-default routing, optional copper keepouts, post-repour connectivity protection, target checks and crystal routing requirements.
+
 ## 2026.11.14.1
 
 - Design rules, native DRC, outline zoom, fanout verification and single-PCB restore workflows.

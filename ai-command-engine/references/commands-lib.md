@@ -19,7 +19,7 @@ Order: find the part and source library → verify symbol, footprint, and model 
 
 ## Modify and delete
 
-- `lib.symbolModify`, `lib.footprintModify`, and `lib.deviceModify` modify resources. Confirm the target library and submit only the intended changes.
+- `lib.symbolModify`, `lib.footprintModify`, and `lib.deviceModify` modify resources. Confirm the target library and submit only the intended changes. If a footprint or device modification reports an unverified result, inspect the library before using a UUID or resubmitting.
 - SDK modification can change a UUID. The response `uuid` is the confirmed readback UUID when available; `uuidChanged` reports a change. `verify` is `get`, `search`, or `none`; `none` means the change was not confirmed by readback. For `partial` or `retryable:false`, inspect current state and do not retry automatically.
 - `lib.symbolDelete`, `lib.footprintDelete`, and `lib.deviceDelete` delete by resource UUID. Verify UUID and library first, then search again or inspect source. If the outcome is unknown, stop dependent writes.
 

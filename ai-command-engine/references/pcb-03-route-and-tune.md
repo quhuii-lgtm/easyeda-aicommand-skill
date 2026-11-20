@@ -4,7 +4,13 @@ Use `__help` in the target window for parameters, defaults, results, and example
 
 ## Plan Routing Paths
 
-- Route critical loops and the hardest pin exits first.
+### Routing order
+
+1. Start with critical loops and constrained pin exits. Use actual pads to select exit directions and provide or reserve the required power, ground and return paths.
+2. Plan related nets together. Arrange nearby passives and local branches before distant and remaining signal routes. Keep distant routes out of local corridors. Change layers or reroute locally when needed.
+3. After the signal stage, complete remaining power and ground work in the order set by the project. Connect local groups before verifying their tie-in to an identified main path. Handle or reserve critical supply, decoupling and return connections with their own circuits.
+
+### Shared corridors
 - Before routing, trial-route or inspect real geometry for constrained exits and shared corridors. Use actual pads, layers, widths, clearances, vias, and obstacles on all layers.
 - No component overlap does not prove the board is routable. A trial covers only the checked scope; record predicted paths separately from completed routes.
 - Shared corridors must fit all related traces at once; do not count the same space repeatedly as each individual trace passes.
@@ -12,6 +18,12 @@ Use `__help` in the target window for parameters, defaults, results, and example
 - Do not change IC pin assignment or connector pin order solely to make routing look orderly.
 - For a simple straight corridor, estimate width from trace widths, clearances, and side margins. Calculate additional space separately for bends, branches, vias, and returns.
 - Do not require horizontal routing on the top layer or vertical routing on the bottom layer.
+
+## Crystal oscillator routing
+
+- Route and check each crystal oscillator circuit as a dedicated local task before general routing. Keep the two signal paths short and direct, on the component layer, with no signal vias or added test branches. Avoid serpentine compensation.
+- Connect the load capacitor returns and any grounded crystal pads to the local reference ground. Where the design calls for a ground guard, leave an opening toward the MCU, connect the guard with ground vias, and verify the real copper return. Apply the project's guidance for the area below the crystal.
+- Read back both signal paths, branches and return connections. Check actual lengths, clearances and adjacent-layer routing. Recheck the protected circuit after surrounding routing or repour.
 
 ## Power, Signals, and Sensing
 
@@ -37,11 +49,12 @@ Use `__help` in the target window for parameters, defaults, results, and example
 
 ## Rerouting and Comparison
 
-- State which components may move, which traces may change, and which connections must remain.
-- For one pin-exit problem, adjust locally first. If a shared corridor is constrained, check the whole related functional group.
+- Define each batch's goal, allowed movements and routing edits, and connections to preserve. Back up before changing existing tracks and keep edits within the necessary scope.
+- Address an isolated pin-exit problem locally. Where authorized, adjust component position or orientation. Compare routing, vias, clearance, supply, returns and neighboring effects for the whole group.
+- Preserve approved decoupling, crystal circuits, direct connections, power paths, reference planes and accepted routing. Before a necessary change, explain its reason and impact and follow existing authorization.
 - If routing repeatedly detours around the same obstacle, inspect the placement cause first.
 - After deletion or shove routing, inspect segments, clipping, neighboring traces, and endpoints outside the edited area.
-- Compare alternatives with identical endpoints, operating conditions, and scope. Record route, layer changes, returns, and neighboring impacts for all affected interfaces.
+- Compare alternatives with identical endpoints, operating conditions and scope. Prefer short direct paths with fewer unnecessary reversals and transitions when electrical, clearance and manufacturing requirements are met. Use [Before-and-After Comparison](pcb-06-verify-and-save.md#before-and-after-comparison) to check actual joints and changes across nets.
 - Failing to find a better route does not prove a layer change is necessary. Shorter routing or fewer vias do not offset electrical, mechanical, or manufacturing problems.
 
 ## Routing and vias
@@ -53,6 +66,8 @@ Choose `top`, `bottom`, or the actual layer number. Versions with name mapping m
 For `pcb.placeVia`, specify net, coordinates, copper diameter, and drill; drill must be smaller than copper diameter. A via is not an NPTH mounting hole. Use `pcb.placePad` or `pcb.placeHole` for standalone pads and mounting holes; specify hole type, copper, and solder mask according to current help.
 
 A creation receipt or ID alone does not prove success. Read back net, layer, endpoints, width, drill, and preservation of original objects. `connectivityVerified:false` means connectivity was not confirmed. Acceptance of a ratsnest calculation request is not a substitute for target DRC.
+
+Before and after local routing, use `pcb.listRatlines` to inspect remaining connection hints. It returns one page only; when `hasMore` is true, continue with the returned cursor. Ratlines do not prove electrical connectivity or a DRC result. Check routed objects and applicable connectivity separately.
 
 If segmented routing returns `partial`, inspect written segments before proceeding; do not replay the full path. Do not delete routes, rebuild, or save/reopen merely to clear a connectivity report; those operations need a clear purpose and authorization.
 
@@ -79,7 +94,7 @@ For fanout plans, `coverage.geometryReview.readCounts` reports SDK getter read c
 
 ### Fanout and local copper
 
-Fanout targets may be selected by component, pad, or net, but IDs must come from the current PCB. Explicitly provide trace width, via copper diameter, drill, escape length, and spacing in mil; drill must be smaller than via copper diameter. Select top or bottom escape for multilayer or through-hole pads. Current fanout creates through vias, not blind or buried vias. If the outline, obstacles, pad shape, or rules cannot be parsed safely, the plan must be unexecutable. Completed fanout only covers planned pad escapes; it does not prove net connectivity, DRC, or manufacturability.
+Fanout targets may be selected by component, pad, or net, but IDs must come from the current PCB. Explicitly provide trace width, via copper diameter, drill, escape length, and spacing in mil; drill must be smaller than via copper diameter. Select top or bottom escape for multilayer or through-hole pads. Current fanout creates through vias, not blind or buried vias. It supports rectangles and explicitly closed straight `POLY` outlines, including concave outlines; curved, open, or otherwise unsupported outlines must remain unexecutable. If obstacles, pad shape, or rules cannot be parsed safely, the plan must be unexecutable. Completed fanout only covers planned pad escapes; it does not prove net connectivity, DRC, or manufacturability.
 
 Local copper plans are grouped by net and copper layer and do not merge different nets. Current outline parsing supports only a verified single closed loop; curves, multiple loops, or incomplete obstacle data make partial geometry unsafe. A `pour` may be clipped to its boundary or have no fill. After create/rebuild, `pcb.getPourFillReadback` can inspect fill objects, parent boundary, net, and layer. A non-empty path is not proof of correct geometry or manufacturability. If execution or fill readback is unknown, preserve the boundary and inspect the board; do not rebuild or delete automatically. `executable:true` permits execution under plan checks but does not guarantee host fill generation.
 
@@ -87,11 +102,15 @@ New pours can specify a net; automated net/name changes for existing pours are u
 
 Pad expansion supports only shapes covered by the plan. Curved outlines may be approximations; retain the full planned contours and fragments. Verify solder-mask expansion in production outputs. Net silkscreen is text only; check pad net, text layer, rotation, bottom-layer mirroring, and visual spacing after execution.
 
+The plugin matches actual child fills to their source and accounts for the copper edge; a parent boundary alone is not copper. Read `coverage.geometryReview.pouredNormalization` after planning. Missing fill caches or unsupported geometry are unknown/incomplete, never empty obstacles. Check supported shapes, conversion, and field meanings in `__help`.
+
 ## Net rules, differential routing, and length tuning
 
 `pcb.createNetClass`, `pcb.renameNetClass`, and `pcb.deleteNetClass` manage net classes; `pcb.listNetClasses` reads them; `pcb.addNetToClass` adds a net. Check current help for member removal. `pcb.createDiffPair` and `pcb.listDiffPairs` create/list pairs; check help for deletion. `pcb.getNetRules` is read-only. `pcb.getNetLength`, `pcb.getNetInfo`, and `pcb.getNetPrimitives` inspect nets; `pcb.highlightNet` helps locate one. Net class, membership, and differential-pair changes are writes; if an outcome is unknown, stop related writes and read back. Rule results can contain unknowns; do not infer inheritance from empty selectors. Confirm a net's own rule only when source, SDK class, and value agree within supported structures. A returned rule is configuration data, not proof of DRC or manufacturing acceptance.
 
 `pcb.routeDiffPair` routes a differential pair along a center path. Verify two distinct nets and an enabled signal layer. Check copper-edge spacing separately from centerline spacing. Use help for parameters.
+
+The plugin cannot persist a non-empty differential maximum-spacing rule and rejects that request. Other differential rule fields remain separate and are not disabled by this limitation.
 
 `dryRun:true` previews without writing; omitted or `false` executes. Offset direction follows path direction; reversing points swaps the spatial sides but not the net names. The command removes only geometrically equivalent consecutive duplicate points and same-direction collinear intermediate points; it does not snap or lengthen input. It rejects the pair before writing for reversals, self-contact, insufficient positive/negative spacing, or unreliable values. After execution, read each segment back and check source coverage, non-LINE records, and rules. On partial failure, stop dependent writes; no automatic retry, delete, or rollback. `plannedLengths` describe the requested paths, not total net lengths; bends can make the two sides differ. The command does not avoid obstacles, tune lengths, parallel duplicate pads, create differential rules, or save. Success does not prove connectivity, full-board DRC, reference plane, matching lengths, or impedance.
 
@@ -123,3 +142,6 @@ Official references: [90-degree arc equal-length style](https://prodocs.easyeda.
 | Fanout and local routing | `pcb.getFanoutPlan`, `pcb.fanout`, `pcb.getPadExpansionPlan`, `pcb.expandPads`, `pcb.routePadBranches`, `pcb.routeDiffPair` | Plan or execute fanout, pad expansion, branches, and differential routes. Inspect plan and target nets first. |
 | Special checks and tuning | `pcb.tuneLength`, `pcb.inspectCurveReadback` | Inspect or adjust curve and trace length. Check current help for supported parameters and host support. |
 | Tracks, vias, and nets | `pcb.listLines`, `pcb.modifyLine`, `pcb.listVias`, `pcb.modifyVia`, `pcb.getNetRules`, `pcb.getNetLength`, `pcb.getNetPrimitives`, `pcb.highlightNet`, `pcb.setNetLock` | Use actual objects and nets, then read back. |
+| Remaining connection hints | `pcb.listRatlines` | Inspect the active PCB before or after routing. Continue with `nextCursor` when more results are available; ratlines do not prove net connectivity or DRC. |
+
+Confirm the project, PCB and tab when modifying a track. If the host splits or merges tracks, inspect the added, removed and changed objects in the receipt and read back the current tracks. Verify candidate IDs before any follow-up operation.

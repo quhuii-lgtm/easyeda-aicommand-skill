@@ -26,8 +26,8 @@
  * 执行中扩展会持续推送 { type:'progress', id } 进度心跳，代理每收到一次就重置该指令的
  * 超时计时器——超时判定从「绝对时长」变为「无心跳时长」（默认各 300s）。
  * 批量指令只要还在推进就永远不会超时；单条指令不上报心跳，语义与旧版一致。
- * 客户端 HTTP 超时后：任务仍在后台执行，重发同参数指令只回进度不重复执行（0.10.42+），
- * 或凭返回的 taskId 用 task.get 查询/补取结果。
+ * 客户端 HTTP 超时后：宿主可能仍在执行，先只读核对原目标或凭 taskId 查询任务，
+ * 确认状态后再决定是否重发。
  *
  * 写指令单行道（0.10.50）：除只读指令（schematic./pcb. 的 list/get/export/runDrc、
  * project. 的 get/list/export、editor.、library.、task.、knowledge.）外，全部写指令
@@ -48,6 +48,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { WebSocketServer } from 'ws'
 import { createModuleLibraryService, getModuleLibraryOriginDiagnostic, isTrustedModuleLibraryOrigin } from './module-library.mjs'
+import { createKiRoutingService } from './kirouting-service.mjs'
 
 const DEFAULT_PORT_START = 49720
 const DEFAULT_PORT_END = 49729
@@ -85,6 +86,7 @@ const PROXY_DIR = process.env.AI_COMMAND_PROXY_DATA_DIR
 	)
 fs.mkdirSync(PROXY_DIR, { recursive: true })
 const moduleLibraryService = createModuleLibraryService({ stateDirectory: PROXY_DIR })
+const kiRoutingService = createKiRoutingService({ stateDirectory: PROXY_DIR, scriptDirectory: path.dirname(fileURLToPath(import.meta.url)) })
 const CREDENTIALS_FILE = path.join(PROXY_DIR, 'jlc-credentials.json')
 const JLC_ENDPOINT = 'https://open-api.jlc.com'
 const SMT_QUERY_PATH = '/smtOpenApi/order/selectComponentInfo'
@@ -237,15 +239,22 @@ function forwardToExtension(message, instanceId) {
 		const id = randomUUID()
 		const timeoutMs = COMMAND_TIMEOUT_OVERRIDES[message.cmd] ?? COMMAND_TIMEOUT_MS
 		const targetId = target.instanceId ?? target.info?.instanceId
-		const entry = { resolve, timer: null, lastProgress: undefined, timeoutMs, id, instanceId: targetId, owner: target.ws }
-		entry.timer = setTimeout(() => {
+		const entry = { resolve, cmd: message.cmd, timer: null, lastProgress: undefined, timeoutMs, id, instanceId: targetId, owner: target.ws, received: false }
+		entry.onTimeout = () => {
 			pending.delete(id)
 			tryCompleteStop(targetId)
-			// 0.10.37：超时只是代理放弃等待，扩展侧可能仍在后台执行（EDA API 无取消机制）——如实告知边界
-			// 0.10.49：附最后收到的进度心跳，客户端可据此判断任务实际推进到哪
 			const prog = entry.lastProgress !== undefined ? `；最后进度：${JSON.stringify(entry.lastProgress).slice(0, 500)}` : ''
-			reject(new Error(`指令执行超时（${Math.round(timeoutMs / 1000)}s 无进度心跳，代理已放弃等待）${prog}。注意：这≠任务已取消，扩展可能仍在后台执行；重发同参数只回进度不重复执行，或用 task.get 查询；重发前也请先用只读指令（如 listTabs/listComponents）确认现场状态`))
-		}, timeoutMs)
+			resolve({
+				ok: false, cmd: message.cmd,
+				error: {
+					message: `指令等待超时（${Math.round(timeoutMs / 1000)}s）${prog}。宿主可能仍在执行；先查任务或原目标状态，再决定是否重发。`,
+					cause: { code: 'BRIDGE_COMMAND_TIMEOUT', requestId: id, instanceId: targetId,
+						stage: entry.received ? 'awaiting-result' : 'receipt-unavailable', retryable: false,
+						outcome: 'unknown', lastProgress: entry.lastProgress },
+				},
+			})
+		}
+		entry.timer = setTimeout(entry.onTimeout, timeoutMs)
 		pending.set(id, entry)
 		// 注意：id 必须放在展开之后——调用方若自带 id 字段会覆盖代理的关联 id，导致响应永远无法匹配（表现为 30s 超时）
 		target.ws.send(JSON.stringify({ type: 'command', ...message, id }))
@@ -265,6 +274,7 @@ const READONLY_COMMAND_PATTERNS = [
 	/^pcb\.(list|get|export|runDrc)/,
 	/^pcb\.runDfm$/,
 	/^pcb\.runSmtDfm$/,
+	/^pcb\.reviewLocalRouting$/,
 	/^pcb\.checkSameNetPadSpacing$/,
 	/^project\.(get|list|export)/,
 	/^editor\.(listTabs|screenshot|zoomToAll|zoomToRegion)$/,
@@ -291,6 +301,12 @@ function containsModuleCommand(command) {
 			pendingCommands.push(...current.params.steps)
 	}
 	return false
+}
+function containsKiRoutingCommand(command) {
+	if (!command || typeof command !== 'object' || Array.isArray(command)) return false
+	if (typeof command.cmd === 'string' && /^pcb\.(kiRouting|importKiRouting|exportKiRouting)/.test(command.cmd)) return true
+	return command.cmd === 'macro' && Array.isArray(command.params?.steps)
+		&& command.params.steps.some(containsKiRoutingCommand)
 }
 /** 每个 EDA 窗口（ws）一条写队列；tail 永远 resolved，深度单独计数 */
 const writeQueues = new Map()
@@ -866,10 +882,10 @@ const server = http.createServer(async (req, res) => {
 
 	// CORS 预检
 	if (req.method === 'OPTIONS') {
-		if (url.pathname === '/module-library') {
+		if (url.pathname === '/module-library' || url.pathname === '/kirouting') {
 			const origin = req.headers.origin
 			if (!isTrustedModuleLibraryOrigin(origin, activePort))
-				return rejectModuleOrigin(res, origin, 'module-library requests from this Origin are not allowed')
+				return rejectModuleOrigin(res, origin, `${url.pathname.slice(1)} requests from this Origin are not allowed`)
 			res.writeHead(204, corsHeaders({
 				'Access-Control-Allow-Origin': origin || '*',
 				'Access-Control-Allow-Methods': 'POST,OPTIONS',
@@ -885,11 +901,12 @@ const server = http.createServer(async (req, res) => {
 	}
 
 	try {
-		if (url.pathname === '/module-library') {
+		if (url.pathname === '/module-library' || url.pathname === '/kirouting') {
+			const endpoint = url.pathname.slice(1)
 			if (req.method !== 'POST')
-				return json(res, 405, { ok: false, error: { message: 'module-library only accepts POST', code: 'METHOD_NOT_ALLOWED' } })
+				return json(res, 405, { ok: false, error: { message: `${endpoint} only accepts POST`, code: 'METHOD_NOT_ALLOWED' } })
 			if (!isTrustedModuleLibraryOrigin(req.headers.origin, activePort))
-				return rejectModuleOrigin(res, req.headers.origin, 'module-library requests from this Origin are not allowed')
+				return rejectModuleOrigin(res, req.headers.origin, `${endpoint} requests from this Origin are not allowed`)
 			let body
 			try {
 				body = JSON.parse(await readBody(req) || '{}')
@@ -897,7 +914,8 @@ const server = http.createServer(async (req, res) => {
 			catch (error) {
 				return json(res, 400, { ok: false, error: { message: `invalid JSON request body: ${error.message}`, code: 'INVALID_JSON' } })
 			}
-			return json(res, 200, await moduleLibraryService.dispatch(body?.action, body?.params ?? {}))
+			const service = endpoint === 'kirouting' ? kiRoutingService : moduleLibraryService
+			return json(res, 200, await service.dispatch(body?.action, body?.params ?? {}))
 		}
 		else if (req.method === 'GET' && url.pathname === '/health') {
 			json(res, 200, {
@@ -907,6 +925,7 @@ const server = http.createServer(async (req, res) => {
 				port: activePort,
 				lifecycleProtocol: 1,
 				moduleLibraryProtocol: 1,
+				kiRoutingProtocol: 1,
 				writeProtection: false,
 				extensionConnected: Boolean(selectedConnection()),
 				extension: extensionInfo,
@@ -971,6 +990,8 @@ const server = http.createServer(async (req, res) => {
 			const command = JSON.parse(body)
 			if (containsModuleCommand(command) && !isTrustedModuleLibraryOrigin(req.headers.origin, activePort))
 				return rejectModuleOrigin(res, req.headers.origin, 'module commands from this Origin are not allowed', { cmd: command.cmd })
+			if (containsKiRoutingCommand(command) && !isTrustedModuleLibraryOrigin(req.headers.origin, activePort))
+				return rejectModuleOrigin(res, req.headers.origin, 'KiRouting commands from this Origin are not allowed', { cmd: command.cmd })
 			// smt.* / write.acknowledge 指令由代理本地执行，无需 EDA 在线；acknowledge 为兼容旧客户端保留的 no-op
 			if (typeof command.cmd === 'string' && (command.cmd.startsWith('smt.') || command.cmd === 'write.acknowledge')) {
 				try {
@@ -1004,11 +1025,18 @@ const server = http.createServer(async (req, res) => {
 			// 并发容量≈2，并发批量 create failed）。读指令不进队列。对调用方透明：并发方式 3
 			// 自动退化为逐条执行，不再失败，代价是吞吐 ~3s/条。
 			const writeLane = isReadOnlyCommand(command.cmd) ? null : acquireWriteLane(routeId)
+			const admittedSocket = writeLane ? connectionFor(routeId)?.ws : null
 			const executeWrite = async () => {
+				const assertOriginalConnection = () => {
+					if (writeLane && (!admittedSocket || connectionFor(routeId)?.ws !== admittedSocket))
+						throw new Error('UNKNOWN_INSTANCE')
+				}
+				assertOriginalConnection()
 				// 破坏性指令执行前自动导出 .epro 备份（官方没有撤销 API，删错不可挽回）
 				let backupFile = null
 				if (DESTRUCTIVE_COMMANDS.has(command.cmd))
 					backupFile = await autoBackupBeforeDestructive(command.cmd, routeId)
+				assertOriginalConnection()
 				const result = await forwardToExtension(command, routeId)
 				if (backupFile && result && typeof result === 'object' && !Array.isArray(result))
 					result.backup = backupFile
@@ -1308,6 +1336,11 @@ wss.on('connection', (ws) => {
 			return
 		}
 
+		if (msg?.type === 'command-received' && msg.id && pending.get(msg.id)?.owner === ws) {
+			pending.get(msg.id).received = true
+			return
+		}
+
 		// 0.10.49：进度心跳——长指令（批量删除/batchWire/macro）执行中扩展逐条/逐阶段上报，
 		// 据此重置该指令的超时计时器：超时语义从「绝对时长」变为「无心跳时长」，
 		// 批量指令不会因总时长被误杀（单条指令不上报心跳，语义不变）
@@ -1316,13 +1349,9 @@ wss.on('connection', (ws) => {
 			if (entry.owner !== ws)
 				return
 			clearTimeout(entry.timer)
+			entry.received = true
 			entry.lastProgress = msg.progress
-			entry.timer = setTimeout(() => {
-				pending.delete(msg.id)
-				tryCompleteStop(entry.instanceId)
-				const prog = entry.lastProgress !== undefined ? `；最后进度：${JSON.stringify(entry.lastProgress).slice(0, 500)}` : ''
-				entry.resolve({ ok: false, cmd: '(超时)', error: { message: `指令执行超时（${Math.round(entry.timeoutMs / 1000)}s 无进度心跳，代理已放弃等待）${prog}。这≠任务已取消，扩展可能仍在后台执行；重发同参数只回进度不重复执行，或用 task.get 查询` } })
-			}, entry.timeoutMs)
+			entry.timer = setTimeout(entry.onTimeout, entry.timeoutMs)
 			return
 		}
 
@@ -1337,6 +1366,16 @@ wss.on('connection', (ws) => {
 		laneLog({ event: 'close', instanceId: closed?.instanceId ?? null })
 		connections.delete(ws)
 		writeQueues.delete(ws) // 0.10.50：窗口断开即废弃其写队列（重连后新建）
+		for (const [id, entry] of pending) {
+			if (entry.owner !== ws) continue
+			pending.delete(id)
+			clearTimeout(entry.timer)
+			entry.resolve({ ok: false, cmd: entry.cmd, error: {
+				message: '指令等待期间目标连接断开。请在同一工程重连后只读核对原操作。',
+				cause: { code: 'BRIDGE_DISCONNECTED', requestId: id, instanceId: entry.instanceId,
+					stage: entry.received ? 'awaiting-result' : 'receipt-unavailable', outcome: 'unknown', retryable: false },
+			} })
+		}
 		// 新连接会创建新的写队列，不继承旧连接的历史写保护状态。
 		if (extensionSocket === ws) {
 			extensionSocket = null

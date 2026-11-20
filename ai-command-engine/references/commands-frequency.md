@@ -9,6 +9,8 @@ This is a task-based navigation aid, not usage statistics or a verification stat
 | Library management | `lib.symbolSearch`, `lib.symbolGet`, `lib.footprintSearch`, `lib.footprintGet`, `lib.deviceSearch`, `lib.deviceGet`, `lib.deviceGetByLcscIds` | `lib.symbolCreate`, `lib.symbolUpdateSource`, `lib.symbolCopy`, `lib.symbolModify`, `lib.symbolDelete`, `lib.symbolOpenInEditor`, `lib.footprintOpenInEditor`, `lib.footprintCreate`, `lib.footprintGetSource`, `lib.footprintUpdateSource`, `lib.footprintCopy`, `lib.footprintModify`, `lib.footprintDelete`, `lib.deviceCreate`, `lib.deviceCopy`, `lib.deviceModify`, `lib.deviceDelete` | [Library commands](commands-lib.md) |
 | Editor | `editor.openDocument`, `editor.closeDocument`, `editor.screenshot`, `editor.listTabs` | `editor.zoomToAll`, `editor.zoomToRegion` | [Connection and setup](setup.md) |
 | PCB view | `pcb.zoomToBoardOutline` | — | [Verify and Save](pcb-06-verify-and-save.md) |
+| PCB placement and native routing | `pcb.nativeAutoLayout`, `pcb.getElectricalPlacementPlan`, `pcb.applyElectricalPlacement`, `pcb.nativeAutoRoute` | `task.get` | [Group and Place Components](pcb-02-group-and-place.md), [Autoroute and Import SES](pcb-04-autoroute-and-import.md) |
+| KiRouting | `pcb.kiRoutingInfo`, `pcb.exportKiRouting`, `pcb.kiRoutingStart` | `pcb.kiRoutingInstall`, `pcb.kiRoutingList`, `pcb.kiRoutingStatus`, `pcb.kiRoutingStop`, `pcb.kiRoutingGetResult`, `pcb.importKiRoutingResult` | [Autoroute and Import SES](pcb-04-autoroute-and-import.md) |
 | Design rules | `knowledge.query` | `knowledge.listRules`, `knowledge.widthForCurrent` | [Knowledge and parts](commands-knowledge.md) |
 | Long-task recovery | `task.get`, `task.list` | — | [Troubleshooting](pitfalls.md) |
 

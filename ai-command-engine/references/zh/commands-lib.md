@@ -19,7 +19,7 @@
 
 ## 修改与删除
 
-- `lib.symbolModify`、`lib.footprintModify`、`lib.deviceModify` 修改资源。确认目标库，仅提交本次变更。
+- `lib.symbolModify`、`lib.footprintModify`、`lib.deviceModify` 修改资源。确认目标库，仅提交本次变更。封装或器件修改结果待确认时，先在库中核对实际对象，再决定使用哪个 UUID 或是否重试。
 - SDK 修改后 UUID 可能变化。返回字段 `uuid` 是读回确认的 UUID（若能确认）；`uuidChanged` 表示变化；`verify:"get"` 或 `"search"` 表示对应读回路径确认，`verify:"none"` 表示无法读回确认。出现 partial/`retryable:false` 时不要补写或自动重试。
 - `lib.symbolDelete`、`footprintDelete`、`deviceDelete` 按资源 UUID 删除；删除前核对 UUID 和库，之后重新搜索或读源码确认。结果未知时停止后续依赖写入。
 

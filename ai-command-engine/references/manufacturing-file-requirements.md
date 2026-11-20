@@ -116,3 +116,9 @@ Unresolved manufacturing or assembly conflicts block the affected production sub
 - Check the quantity and default state of 0-ohm resistors.
 - Restore and inspect any 0-ohm resistor removed or replaced during testing before delivery, as specified by the plan.
 - Prototype verification includes actual programming and probe-contact checks.
+## Plugin preflight
+
+- Obtain Gerber, BOM and placement files from the same board revision. Check command availability in the target window.
+- Use `pcb.preflightAssembly` to assign each reference to manual assembly, pick and place, or omit. Check both placement reference lists before saving. Provide an original Gerber paste region when checking stencil openings for manually assembled parts.
+- Use `pcb.exportGerber` to export the original archive and list its actual entries. Use `pcb.inspectManufacturingPackage` to check the outline, drilling and production/reference files. Keep the original archive and review coverage before saving selected entries.
+- Save original bytes from `pcb.exportPickPlace` and `schematic.exportBom` using the reported actual encoding, delimiter and filename.

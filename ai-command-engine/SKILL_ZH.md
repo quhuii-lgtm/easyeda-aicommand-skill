@@ -29,7 +29,7 @@ description: 通过本地 HTTP 指令查询、绘制、修改和检查嘉立创 
 1. [读板与设计规则](references/zh/pcb-01-read-board-and-rules.md)
 2. [器件分组与布局](references/zh/pcb-02-group-and-place.md)
 3. [手动布线与调谐](references/zh/pcb-03-route-and-tune.md)
-4. [自动布线与SES导入](references/zh/pcb-04-autoroute-and-import.md)
+4. [自动布线与结果导入](references/zh/pcb-04-autoroute-and-import.md)
 5. [覆铜与丝印](references/zh/pcb-05-copper-and-silkscreen.md)
 6. [检查与保存](references/zh/pcb-06-verify-and-save.md)
 
@@ -59,6 +59,8 @@ description: 通过本地 HTTP 指令查询、绘制、修改和检查嘉立创 
 
 | 任务 | 直接打开 |
 | --- | --- |
+| 电源地、参考面与实铜 | [电源地接入与实铜连通验收](references/zh/pcb-power-ground-connectivity.md) |
+| 写入结果不明、拆并线与恢复 | [写入结果不明与拆并线核对](references/zh/write-reconciliation-and-recovery.md) |
 | 连接、选择窗口、单位、超时恢复 | [连接与环境](references/zh/setup.md) |
 | 查找指令分类 | [指令分类](references/zh/commands-frequency.md) |
 | 原理图绘制与修改 | 按上方四阶段指南执行，命令索引在各阶段内。 |

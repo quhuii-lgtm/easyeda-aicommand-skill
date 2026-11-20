@@ -20,17 +20,17 @@ Use `__help` in the target window for parameters, defaults, results, and example
 - Check critical IC placement against manufacturer layout requirements for the specific part, footprint, and operating conditions. Distinguish mandatory requirements, recommendations, and choices adopted by this project.
 - Apply requirements to specific pads, traces, and return paths. Do not copy example-board coordinates, fixed distances, grid, or rotation angles.
 - Group by actual connectivity, not only designator prefix or component type. Identify which pin, interface, or loop each supporting part serves.
-- Place supporting parts relative to actual pins and return paths, not in a row around the IC center. Place frequently interconnected areas next to each other with a defined routing corridor.
+- Place nearby resistors and capacitors by their actual pads. Choose an orientation that allows a short, direct connection and leaves room for power and return paths. Place frequently interconnected areas next to each other and reserve a routing corridor.
 - When moving or rotating an MCU, check every used interface, supporting component, and neighboring area. Flyline crossings, center distance, and total flyline length are candidate-selection aids only.
 
 Specific part requirements are maintained in `component-pcb-profiles`. Check the manufacturer's source for any unverified part requirements.
 
 | Circuit | Placement checks |
 | --- | --- |
-| Decoupling and power | Check the actual path among supply pin, pad, via, and return; distance to the capacitor alone is insufficient. |
+| Decoupling and power | Keep decoupling near the supply pin with short, direct connections and a compact return. Check the actual loop through pads, vias and return copper. |
 | Power conversion | Arrange input, conversion, and output paths; check high-frequency loops, bootstrap, feedback, and thermal space. |
 | Driver and power switch | Check driver and switching loops; keep power paths from interfering with gate and sensing paths. |
-| Crystal and clock | Place crystal and load parts around clock pins; follow the specific guide for guard ground and routing below. |
+| Crystal and clock | Place the crystal oscillator close to the MCU clock pins and away from switching nodes, PWM, and high-current paths. Place each load capacitor close to its corresponding MCU clock pin, with its signal terminal facing the MCU. Preserve an approved crystal orientation. Leave a clear route from the MCU to the crystal and check body, pad and silkscreen clearances against the project requirements. |
 | Communication interface | Place protection, termination, and branches according to their function and interface topology. |
 | Protection and freewheeling | Check the relationship among protection point, fault source, return, and protected path. |
 | Analog and sensing | Keep inputs, references, and filters away from interference; match sensor position and axis to the measurement goal. |
@@ -72,6 +72,24 @@ Use `pcb.modifyComponentAttribute` for designator position, angle, font, or visi
 - After `pcb.moveComponent`, verify position, angle, side, and lock state. `pcb.checkPlacement` uses readable pad boundaries; skipped or unsupported objects do not count as a pass.
 - When schematic import/update has been read back and sources are verifiable, offer functional-region marking and component-moving groups as separate optional choices. Reuse explicit choices; do not execute either without authorization. See [optional tool offer rules](pcb-01-read-board-and-rules.md#pcb-optional-tools).
 
+## Native automatic placement
+
+- `pcb.nativeAutoLayout` is an optional EDA-native method; use it after the user selects it.
+- `dryRun:true` reports counts only; it does not preview component positions.
+- `dryRun:false` moves all unlocked components and leaves locked components in place.
+- Existing routes may become disconnected; allow their movement only with explicit `allowRoutedMovement:true`, then recheck connectivity.
+- Read back moved and failed component IDs and source; verify pads, placement, connectivity, DRC, and persistence.
+
+## Placement with explicit pad-distance constraints
+
+- `pcb.getElectricalPlacementPlan` makes a read-only translation plan for named movable components and distance limits between real pads identified by component and pad ID or number; use `__help` for parameter details.
+- Review every constraint and proposed move; report unmet limits individually and do not apply the plan.
+- A feasible solution after search exhaustion is not necessarily optimal; a changed PCB identity or source invalidates the old plan.
+- Preview with `pcb.applyElectricalPlacement` using default `dryRun:true`, then execute the reviewed plan with `dryRun:false`.
+- If a write result is unknown, inspect the task and board before proceeding; do not resend.
+- Read back actual pads and non-target components, then trial-route, run DRC, save, reopen, and verify.
+- The current scope supports one non-rounded rectangular, zero-rotation outline and supported pad bounding boxes; it does not fully check courtyards, concave outlines, or assembly integrity, and pad distance does not prove return-path or EMI performance.
+
 ## Mark and locate schematic functional regions
 
 These commands use functional frames in the schematic associated with the current PCB. They mark regions or locate/highlight them without moving components.
@@ -95,4 +113,6 @@ If the PCB changes or a preview becomes stale, check the active board and previe
 | --- | --- | --- |
 | Schematic region marks and highlighting | `pcb.getSchematicRegions`, `pcb.markSchematicRegions`, `pcb.locateSchematicRegion` | Read region members, preview marks (`dryRun:true` by default), explicitly execute marks (`dryRun:false`), or locate/highlight without writing design data. |
 | Placement and outline | `pcb.moveComponent`, `pcb.checkPlacement`, `pcb.drawOutline` | Move components, check spacing, and create the board outline. |
+| Native automatic placement | `pcb.nativeAutoLayout` | Optionally inspect read-only counts or run EDA-native placement; locked components remain unchanged, then read back and recheck connectivity. |
+| Pad-distance-constrained placement | `pcb.getElectricalPlacementPlan`, `pcb.applyElectricalPlacement` | Create a read-only plan from explicit pads and distance limits, then preview and apply the specified local translations. |
 | Component-moving groups and recovery | `pcb.groupBySchematicRegions`, `pcb.sourceRollback` | Move components to create groups only when explicitly selected. Verify the target and backup before recovery. |

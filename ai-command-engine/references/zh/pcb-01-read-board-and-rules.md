@@ -25,7 +25,7 @@
 | --- | --- | --- |
 | 原理图功能区标记和高亮 | 目标 PCB 及其原理图关联已核实后，询问是否标记或定位功能区。 | 用 `pcb.getSchematicRegions` 读取成员和未匹配对象，包含锁定成员。用默认 `dryRun:true` 预览 `pcb.markSchematicRegions`；只有用户明确选择后才用 `dryRun:false` 执行，再读回、保存、关闭、重开并核对。`pcb.locateSchematicRegion` 只定位/高亮，不写入设计数据。 |
 | 移动器件分组 | 仅在用户明确要求移动器件并已查看影响时使用。 | `pcb.groupBySchematicRegions` 会移动器件并创建分组，与功能区标记和高亮分开；不要默认调用。 |
-| 自动布线 | 本轮包含布线，布局、规则和受限通道检查完成，DSN及层映射、在线服务或外部CLI条件具备时，提出是否采用自动布线。 | 在线方式按导出DSN、启动任务、查询、取回SES、显式导入及验收执行；外部CLI按导出DSN、运行已选CLI、显式导入SES执行。选择不用自动布线则按已授权的常规方式处理。 |
+| 自动布线 | 本轮包含布线且布局、规则、受限通道已检查时，可提出采用自动布线。 | 默认选原生并明确目标网络。选 FreeRouting 或 KiRouting 时，再检查各自的输入格式、运行环境和选网条件，按[自动布线流程](pcb-04-autoroute-and-import.md)执行。 |
 | 密脚扇出 | 密脚焊盘或换层出口需要扇出，真实焊盘、网络、线宽、孔和障碍条件已明确时。 | 先出计划，核对可执行范围，再执行和检查；不选宏仍须满足必要的引出及连接要求。 |
 | 差分布线/补长工具 | 已确认差分或时序要求，网络、参考面、目标及容差明确，且需要相应几何工具时。 | 按当前支持范围规划与执行，不为普通控制线无故补长；不选工具不等于免除已确认的差分或时序要求。 |
 | 自动铜皮/焊盘外扩 | 已明确局部载流或连接需求，目标焊盘、网络、层及所需尺寸可核对时。 | 说明会增加或改变哪些铜形，选用后先计划、再执行及读回；不对无关焊盘自动扩形。 |
@@ -135,23 +135,40 @@ S 表示信号，G 表示地，P 表示电源。
 
 用 `pcb.listComponents`、`pcb.getComponentPads`、`pcb.listNets`、`pcb.listLayers` 读取现状。对象ID来自当前PCB，不从旧截图或其他工程套用。焊盘数组从1开始的索引与运行时ID分别核对。
 
+调用 `pcb.placePad`、`pcb.placeHole` 时，仅使用当前 `__help` 列出的目标元数据；命令注册表会对照当前焦点文档和工程验证，目标不符时在写入前拒绝，也不会切换页面。`pcb.placePad` 支持在顶层或底层放置独立圆形、长圆和矩形焊盘；不支持真椭圆，因为保存重开会将其变为圆形。可选 `padType` 默认为 `normal`，`test` 表示单个测试点；它不会自动选择网络、批量排布或避让测试点，需核对测试点制造导出。
+
+`pcb.placeVia` 的 `viaType` 可选 `0` 普通过孔或 `2` 单个缝合孔；`pcb.listVias` 可读类型，`pcb.modifyVia` 可修改类型。这些指令不提供自动批量布孔或避让。
+
 ## 板框与图层
 
 - `pcb.drawOutline` 使用左下角坐标和mil尺寸。重复建立板框前，先核对已有图元类型与ID。
+- `pcb.getCanvasOrigin` 读取画布原点相对数据原点的偏移，单位 mil；`pcb.setCanvasOrigin` 设置偏移，不移动设计图元。采用画布原点的制造导出坐标可能随之变化；修改后要核对制造坐标。
 - `pcb.setCopperLayers` 设置铜层数，不代表物理层叠已配置；层叠应用后重新读取。默认层叠不等于当前PCB已应用。
 - 图层名称与层号以当前命令帮助为准。未知名称不猜测，内层先确认当前板中可用。
 
 ## 网络规则、差分走线与补长
 
-### 网络类与网络规则
+### 设计规则和规则方案
 
-按本轮授权更新规则与现有网络/网络类绑定。先调用 `pcb.getDesignRules`，查看原结构和单位。用默认 `dryRun:true` 的 `pcb.updateDesignRules` 预览；预览符合已授权的修改要求后，再设 `dryRun:false` 执行。只修改 `configuration.config` 内明确指定的字段；外层 `name` 是宿主元数据，不可指定或写入。网络/网络类绑定只更新现有条目，保留其身份。网络类分配会同步成员，预览逐条列出受影响项；同批对单个网络的明确指定优先。写后读回规则；保存、关闭并重开 PCB，才能确认持久性。结果不明时停止依赖操作，先检查当前规则。参数和字段以 `__help` 为准。
+修改规则前先调用 `pcb.getDesignRules`。公开 getter 返回的分析子项为空时，将相应配置标为未覆盖；不要猜字段或数值。DRC 检查仍可使用。
+
+用默认 `dryRun:true` 的 `pcb.updateDesignRules` 预览；检查预览后才用 `dryRun:false` 执行。只修改 `configuration.config` 内明确指定的字段；外层 `name` 是宿主元数据，不可写入。网络/网络类绑定只更新现有条目并保留身份。网络类分配会同步现有成员，预览列出受影响项；同批明确指定的单网络值优先。写后读回；保存、关闭并重开 PCB 以确认持久性。结果不明时停止依赖操作，先检查当前规则。
+
+新增 TRACK 规则须提交完整的 `config.Physics.Track.<name>` 对象；可在同一更新请求中合并受支持的既有字段修改，具体路径和单位查 `__help`。`pcb.deleteTrackRule` 只删除当前 PCB 中源码匹配、无引用的非默认 TRACK 定义。它与删除应用级模板的 `pcb.deleteRuleConfiguration` 不同；先检查默认预览，再保存重开确认持久性。
+
+仅当逐字段源码证实数值表示差异时才报告 normalization，例如 SAFE 未选中的间距网格单元或已映射的 SOLDER/PASTE 扩展。这不是通用容差，也不表示全部规则都已映射或验证。
+
+规则方案命令管理应用级模板库。`list`、`get` 读取模板；`save` 将已有完整配置复制为模板，省略来源时复制当前 PCB 的完整配置；`rename`、`delete` 管理自定义模板。这些命令不调用默认方案设置接口；保存模板不等于应用到当前 PCB。需要确认板上或默认方案状态时单独读取，不从模板写入成功推断 SDK 的其他状态。写操作默认先以 `dryRun:true` 预览，核对后才执行；具体参数和字段查 `__help`。
+
+当前 PCB 配置另存和自定义模板复制已有验证；系统模板原始格式的复制仍未解决，不要先应用到 PCB 来暗中转换。默认模板名称无法读取时，即使模板内容验证成功，也须将默认状态列为未验证。
+
+等长容差的命名绑定也可能在保存时变成 `default`；当前数值保持，不证明以后仍固定绑定该名称。
 
 `Track:"default"` 表示跟随默认方案。宿主保存时可能把指向当前默认方案名称的绑定转成 `default`。不能保证以后切换默认方案时仍固定绑定原名称。`verified` 只确认即时读回，持久性须保存重开核对。
 
 | 命令 | 用途 |
 | --- | --- |
-| `pcb.getDesignRules`、`pcb.updateDesignRules` | 读取或更新设计规则；按上面的预览和读回流程操作。 |
+| `pcb.getDesignRules`、`pcb.updateDesignRules`、`pcb.deleteTrackRule`、`pcb.listRuleConfigurations`、`pcb.getRuleConfiguration`、`pcb.saveRuleConfiguration`、`pcb.renameRuleConfiguration`、`pcb.deleteRuleConfiguration` | 读取、更新设计规则、删除符合条件的当前板 TRACK 定义，或管理应用级模板；写操作先预览。模板不会应用到当前 PCB。 |
 | `pcb.createNetClass`、`pcb.renameNetClass`、`pcb.deleteNetClass` | 建立、改名或删除网络类。 |
 | `pcb.listNetClasses` | 查看网络类。 |
 | `pcb.addNetToClass` | 将网络加入网络类；删除成员按当前帮助确认对应命令。 |
@@ -171,8 +188,11 @@ S 表示信号，G 表示地，P 表示电源。
 | 任务 | 命令 | 用途 |
 | --- | --- | --- |
 | 查看现状 | `pcb.listComponents`、`pcb.getComponentPads`、`pcb.listNets`、`pcb.listLayers` | 查看器件、焊盘、网络和图层。 |
-| 设计规则 | `pcb.getDesignRules`、`pcb.updateDesignRules` | 仅更新 `configuration.config` 内指定字段；外层 `name` 是宿主元数据。先预览，保留现有绑定并在写后读回。 |
+| 设计规则和规则方案 | `pcb.getDesignRules`、`pcb.updateDesignRules`、`pcb.deleteTrackRule`、`pcb.listRuleConfigurations`、`pcb.getRuleConfiguration`、`pcb.saveRuleConfiguration`、`pcb.renameRuleConfiguration`、`pcb.deleteRuleConfiguration` | 读取或更新指定字段、删除符合条件的当前板 TRACK 定义，或管理应用级模板；写操作先预览，模板不会应用到当前 PCB。 |
 | 网络类、差分与等长组 | `pcb.createDiffPair`、`pcb.listDiffPairs`、`pcb.deleteDiffPair`、`pcb.createNetClass`、`pcb.listNetClasses`、`pcb.addNetToClass`、`pcb.removeNetFromClass`、`pcb.deleteNetClass`、`pcb.renameNetClass`、`pcb.createEqualLengthGroup`、`pcb.listEqualLengthGroups`、`pcb.renameEqualLengthGroup`、`pcb.deleteEqualLengthGroup`、`pcb.addNetToEqualLengthGroup`、`pcb.removeNetFromEqualLengthGroup` | 管理网络分组、差分对和等长组。删除网络类不承诺恢复此前的网络颜色；修改前确认目标。 |
+| 焊盘对组 | `pcb.listPadPairGroups`、`pcb.createPadPairGroup`、`pcb.renamePadPairGroup`、`pcb.deletePadPairGroup`、`pcb.addPadsToPadPairGroup`、`pcb.removePadsFromPadPairGroup`、`pcb.getPadPairGroupMinWireLengths` | 先核对焊盘引用并读取现有组，再创建或修改目标组并读回。焊盘对组不会布线或验证焊盘的电气连接；主机报告的最短导线长度单位未知，不能作为布线验收。参数查 `__help`。 |
 | 图层和层叠 | `pcb.getCurrentLayer`、`pcb.selectLayer`、`pcb.setCopperLayers`、`pcb.setLayerVisible`、`pcb.setLayerLocked`、`pcb.listStackingConfigs`、`pcb.getStackingConfig`、`pcb.applyStackingConfig`、`pcb.saveStackingConfig`、`pcb.renameStackingConfig`、`pcb.deleteStackingConfig`、`pcb.setDefaultStackingConfig`、`pcb.addCustomLayer`、`pcb.removeCustomLayer`、`pcb.modifyLayer`、`pcb.setPcbType` | 查询或设置当前层、铜层数、图层和层叠。EDA 4.1.78 已确认 `pcb.getCurrentLayer`、全部层叠配置命令及实时 DRC 命令会拒绝执行，提示需要 EDA 4.2；不要将拒绝视为功能通过。 |
 | 选择与定位 | `pcb.getSelection`、`pcb.select`、`pcb.clearSelection`、`pcb.crossProbe`、`pcb.getPrimitivesInRegion`、`pcb.getPrimitiveAtPoint` | 查询选择、交叉定位或按区域和坐标查找图元。 |
 | 板框与同步 | `pcb.drawOutline`, `pcb.importChanges` | 建立板框。原理图同步由用户在 EDA 确认。 |
+| 过孔与测试焊盘 | `pcb.placeVia`、`pcb.listVias`、`pcb.modifyVia`、`pcb.placePad` | 需要时放置单个缝合孔或标记单个独立测试点。`pcb.placePad` 支持长圆焊盘，不支持真椭圆。不会自动批量选网、排布或避让。核对源码属性和测试点制造导出。 |
+| 画布原点 | `pcb.getCanvasOrigin`、`pcb.setCanvasOrigin` | 读取或设置画布偏移，不移动图元；修改后复核采用画布原点的制造坐标。 |

@@ -42,7 +42,7 @@ Verify the window, project, and page using [Connection and Environment](setup.md
 
 - `schematic.setAttribute` changes an existing attribute using current help. A target or parameter lookup failure is rejected before writing. Exceptions after invocation, waits, or unconfirmed readback must be treated as `partial:true`, `retryable:false`. Check the attribute and call state; do not replay directly.
 
-- `schematic.moveComponent` does not move existing wires. Use `schematic.autoLayout` only to arrange an existing functional area: constrain the target, run `dryRun`, and save before execution. `rewire` deletes and recreates related wires; inspect skipped wires and partial moves. On failure, check `error.cause.moved` and current state; do not assume rollback.
+- `schematic.moveComponent` does not move existing wires. Use `schematic.autoLayout` to arrange an existing functional area. Constrain the target, run `dryRun`, and save before execution. Before moving components, `rewire` checks the affected pins. A missing target pin stops the operation. Unverified external pins leave the related components and wiring in place. Inspect skipped nets, skipped wires, and partial moves. On failure, check `error.cause.moved` and current state.
 
 ## Command index
 

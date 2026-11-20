@@ -4,11 +4,11 @@ Use `__help` in the target window for parameters, defaults, results, and example
 
 ## Before-and-After Comparison
 
-Follow the [PCB command workflow](pcb-06-verify-and-save.md) for modification, deletion, and saved readback. Compare nets and geometry, and retain unexplained differences for review.
-
-- After same-net traces merge, check endpoints, route, layer, and width.
-- When a generated copper ID changes, separately check the boundary, filled geometry, and connectivity.
-- Report ID-only changes separately from actual copper changes.
+1. Before each batch affecting nets, traces, vias or copper, retain board-wide ratlines, connection and DRC details, and relevant objects and rules. Complete paginated reads and record revision and coverage.
+2. Reread under the same rules and scope. Compare target connectivity, added or changed findings across all nets, power and reference copper, non-target parts and routing, and rules. Match by net, layer, location and geometry. A lower DRC count can still contain a new disconnection.
+3. Check obstacles on every actual via layer. Check drill-to-pad spacing, including same-net objects where applicable. Where 45° routing is required, also check reversals and acute joints. Local checks establish only their stated coverage.
+4. Use [Write Reconciliation](write-reconciliation-and-recovery.md) to separate IDs from actual copper. Follow [Power and Ground Tie-In](pcb-power-ground-connectivity.md) for affected power, ground and reference copper. Apply the save/reopen scope below.
+5. Generate reports from matching readback. Separate component displacement, trace-length change, net via change, planned paths, actual segments and ID changes. Record inspected layers, save/reopen state and outstanding checks. Keep current results separate from historical batches.
 
 <a id="pcb-completion-checks"></a>
 ## Completion Checks
@@ -25,17 +25,40 @@ Use `pcb.zoomToBoardOutline` to fit the board outline with the native PCB view c
 | Outline, holes/slots, and mechanics | Compare mechanical drawings with outline, holes/slots, component locations/body outlines; inspect top/bottom and applicable 3D/assembly data for height, insertion, mounting, and probe access. | Dimensions, location, and orientation meet confirmed conditions with no body or assembly interference. Pad non-overlap alone is insufficient; report missing required evidence. |
 | Stackup and rules | Read available layers, rules, and physical stackup; compare signal/reference layers, copper/dielectric thickness, and net/layer/region rules. Where unsupported, inspect applicable sources or EDA UI. | Design conditions and affected objects are clear. Layer count/name does not prove physical stackup; unknown values are not replaced with defaults. |
 | Placement and routability | Use actual pads, `checkPlacement`, and current local geometry for functional groups, critical support parts, and exits. Check constrained corridors for the whole trace group, widths, clearances, vias, and all-layer obstacles. | Required local circuits and return paths are reasonably placed with feasible space for affected trace groups. Recheck collision candidates; skipped objects or pad-box approximations are not a complete pass. |
-| Traces, vias, and connectivity | Use `listLines`, `listVias`, `getNetInfo`, `getNetPrimitives`, and applicable DRC to check actual endpoints, net, layer, width, copper/drill, and pad contact; zoom into critical joints. For fanout, `coverage.geometryReview.readCounts` are SDK getter read counts; assess `coverage.geometryReview.warnings`, `coverage.geometryReview.unknown`, and `coverage.geometryReview.status` for local completeness. | In-scope connections match intent; whole-board routing has no unresolved required disconnections. Flyline refresh, nonempty IDs, segment counts, completed autorouter service, or local fanout coverage do not prove connectivity or replace DRC. |
+| Traces, vias, and connectivity | Use `pcb.reviewLocalRouting` with `listLines`, `listVias`, `getNetInfo`, `getNetPrimitives`, and applicable DRC to check local trace/arc contacts and known same-layer clearances to supported pad shapes and vias. Inspect its coverage and read status. For fanout, `coverage.geometryReview.readCounts` are SDK getter read counts; assess `coverage.geometryReview.warnings`, `coverage.geometryReview.unknown`, and `coverage.geometryReview.status` for local completeness. | The report covers only readable supported shapes. Distances to objects with unassigned nets are reported separately and are not treated as confirmed inter-net clearance violations. Unknown pad shapes, via spans, cross-layer contacts, and copper pours remain unverified. Full electrical connectivity and copper-island proof are not implemented; this is a tool scope limit, not an EDA defect. It does not replace DRC. |
 | Critical electrical paths | Check power paths, sensing, reference plane, returns, layer changes, differential pairs, and length against project/manufacturer requirements; use actual geometry and selected parameters. | Required ampacity/drop/temperature, impedance/timing, and return conditions meet their stated basis. Mark not-applicable items; supplement tool gaps; missing data cannot pass. |
-| Copper and silkscreen | Use `listPours`, `getPourFillReadback`, `checkSilkscreen`, and current top/bottom views to inspect actual copper, openings, designators, polarity, edge, and pin order. | Required copper is filled with correct connectivity/continuity and silkscreen is readable. Boundary-only, `no-fill`, source candidates, or `complete:false` do not prove completion. |
+| Copper and silkscreen | Use `pcb.reviewCopperShape` for a selected pour's supported outline, open copper strokes, and requested cross-sections. Use `listPours`, `getPourFillReadback`, `checkSilkscreen`, and current top/bottom views for fill, connection, text, polarity, edge, and pin order. | Reported widths apply only to the requested sections and stated coverage, not the narrowest point over the whole pour. Sharp-corner candidates cover only straight-connected corners on the outer contour. This check does not prove electrical connectivity or islands; those checks are not implemented, rather than known EDA defects. Boundary-only, `no-fill`, source candidates, or `complete:false` do not prove completion. |
 | DRC and manufacturing | Run `runDrcDetailed` with complete coverage on the final whole-board revision. For manufacturing delivery, use applicable `runDfm`, `runSmtDfm`, and `checkManufacturingProfile`; check manufacturing files and order conditions. | No unresolved errors; remaining warnings are handled per confirmed project decisions. Unsupported, skipped, approximate, and unknown items are checked separately or listed incomplete; do not mask issues by changing rules/default process. |
 | Board view and persistence | Inspect updated top/bottom, critical regions, and applicable layers; verify object and current PCB state. Apply the save/reopen scope below and compare target and non-target content. | View and persisted state match checked scope. Old screenshots, local DRC, or command success alone do not prove whole-board acceptance. |
 
 Report placement, routing, electrical, mechanical, and manufacturing separately. For local work, mark unperformed whole-board/production checks out of scope, not passed. If required evidence for manufacturing is missing, list it incomplete. Realtime/custom DRC is not a complete check; clearing a marker is not a repair.
 
+### Screenshot-Assisted Inspection
+
+After placement, local routing or copper work, inspect the affected scope in this order: find visual candidates, measure with commands, then confirm with applicable DRC and saved-data readback. Screenshots do not replace precise geometry or electrical checks.
+
+1. Read the current project and PCB identity, then match the visible project/page and recognizable components or outline. Do not draw conclusions from a stale image, an unknown source or a mismatched window title and canvas. Capture again or ask for the corresponding user image; independent data checks can continue.
+2. Inspect a board or scoped overview, then enlarge critical joints, layer changes, necks and suspected defects. Show top, bottom and relevant inner layers separately as needed. Confirm copper is displayed as actual fill rather than its boundary; read-only inspection does not authorize repouring or changing rules.
+3. Record a locatable position, reference or net, layer and image source. When follow-up comparison is needed, keep images in the project's existing evidence location and associate them with the board revision. Avoid unlocatable crops.
+4. Verify candidates as below. Mark missing evidence unresolved; visual contact, no visible airwires or matching colors are not proof of connectivity.
+
+| Visual candidate | Follow-up verification |
+| --- | --- |
+| Broken/missing trace or trace-to-pad contact | Read pad nets and trace endpoints; combine `pcb.reviewLocalRouting`, net readback and applicable DRC. Visible contact does not prove same-net or cross-layer connectivity. |
+| Separate copper fragment or suspected island | Check actual fill, net, vias and connections on relevant layers. A small fragment may connect through another layer; missing connection evidence cannot establish an island. |
+| Narrow copper neck | Use `pcb.reviewCopperShape` with a section approximately perpendicular to the local copper path and extending beyond both edges. Read width and coverage using current help. Do not infer precise dimensions from pixels or a whole-zone minimum from one section. |
+| Special pad or blind/buried-via contact | Compare pad shape, drill size, layer span and connections on each layer. A single-layer image cannot establish via span; list unsupported geometry explicitly. |
+| Direct or thermal copper connection | Inspect both enlarged actual fill and the relevant zone properties, then read back affected objects and connection settings. Apply the current save-verification scope; a properties screenshot alone does not prove settings were applied. |
+
+After a correction, recapture the affected region and recheck its relevant data. Separate visual observations, data-confirmed findings and unresolved items. Visual candidates are not automatically confirmed violations, and images cannot clear tool unknowns. Full electrical connectivity, island detection and whole-zone minimum-neck checks remain subject to actual capabilities, not enabled merely by this inspection procedure.
+
 ### Interpret DRC results
 
 `pcb.runDrc.violations` retains the native result tree. `pcb.runDrcDetailed.violations` lists individual violations, while `rawResult` retains the complete native tree. Counts classify leaf items by severity; unknown items or incomplete returned branches must not be treated as a pass. `passed` only means this API call listed no violations; it does not prove that every rule or manufacturing requirement passed. Check `__help` for fields and parameters.
+
+For recognized native detailed-result leaves, `xMil` and `yMil` are in mil relative to the data origin (`coordinateUnit:"mil"`, `coordinateBasis:"data-origin"`). Do not add a canvas-origin offset when using these coordinates. Raw `x`, `y`, and the full raw tree remain available. Leaves whose native structure is not recognized have no mil coordinates and cannot be located by coordinates. This mapping reflects observed native structures, not a universal unit guarantee from the official API.
+
+Coordinate-based view zoom remains limited: public zoom APIs can report success without changing the visible view. Verify the actual canvas before reporting successful localization. Use `pcb.select` with violation object IDs to help find objects; selection does not replace coordinate zoom or move primitives.
 
 ### Save and Reopen Scope
 
@@ -46,7 +69,9 @@ Report placement, routing, electrical, mechanical, and manufacturing separately.
 
 ### Restore one PCB from a source backup
 
-Use `pcb.sourceRollback` only for an explicitly authorized full restore of one PCB. `verifyPersistence` defaults to `true`; check `__help` for parameters.
+Before a multi-object edit that would be costly to reconstruct, `pcb.sourceCheckpoint` can make a verified source checkpoint. It does not edit or save the PCB. Confirm `verified:true` and read the returned storage location; the proxy file stack keeps the latest five checkpoints per project, while the offline extension-storage fallback is a single slot and can replace the previous checkpoint.
+
+Use `pcb.sourceRollback` only for an explicitly authorized restore of one PCB. `verifyPersistence` defaults to `true`; check `__help` for parameters. Do not rely on this path to restore complex filled copper: filled objects may be missing and rebuilding them may change copper geometry. This recovery has not passed for complex poured boards.
 
 1. Compare the complete restored source with the selected backup.
 2. Confirm the result reports `saved:true`.
@@ -79,6 +104,12 @@ After complete DRC passes, run PCB DFM and applicable SMT manufacturing/assembly
 Report the result revision, input process, item-level outcomes, supplemental-check basis, and unresolved issues for project-stage acceptance. Passing within the tool's coverage does not mean all manufacturing requirements pass.
 
 ## Checks, save, and manufacturing exports
+
+- Use `pcb.getRevision` to compare a prior DRC report with the current board and rule snapshots. Rerun DRC if the result is stale or its revision cannot be confirmed.
+- Back up and read back the intended modification before using `pcb.save` with reopen verification. Check both the save acknowledgement and the comparison after reopening.
+- Use `pcb.reviewLocalRouting` for local trace/arc contact candidates and known same-layer clearance estimates against supported pad shapes and vias. Distances to objects with unassigned nets are listed separately, not as confirmed inter-net violations. Check coverage and read status; full electrical connectivity and copper-island proof are not implemented.
+- Use `pcb.reviewCopperShape` for one selected pour and optional requested cross-sections. Sections do not identify the narrowest point across the whole pour; sharp-corner candidates cover only straight-connected corners on the outer contour. Do not infer whole-pour minimum neck, electrical connectivity, or islands.
+- For DFM, inspect manufacturing silkscreen findings and any supplied pad-purpose evidence separately from pad clearance.
 
 1. Use `pcb.runDrcDetailed` to locate issues by object, net, rule, and layer; do not rely on totals alone.
 2. Use `pcb.runDfm`, `pcb.runSmtDfm`, and `pcb.checkManufacturingProfile` as required. Profile data needs sources; verify actual manufacturer stackup, calculations, and order separately.
@@ -131,6 +162,7 @@ For production delivery, continue with [Manufacturing File Requirements](manufac
 | Task | Commands | Purpose |
 | --- | --- | --- |
 | Board view, DRC, and save | `pcb.zoomToBoardOutline`, `pcb.runDrc`, `pcb.runDrcDetailed`, `pcb.getNetInfo`, `pcb.save` | Fit the outline without moving primitives, run DRC, inspect a net, and save. `visualVerified:false` needs visual inspection; a clean DRC alone does not prove full rule or manufacturing acceptance. |
+| PCB source checkpoint | `pcb.sourceCheckpoint` | Before a multi-object change, create and verify a checkpoint. It does not edit or save the PCB; check the returned storage location and retention behavior. |
 | PCB source recovery | `pcb.sourceRollback` | Restore one explicitly authorized PCB from a source backup; default `verifyPersistence:true`, compare complete source, confirm save and close, then reopen and compare again. |
 | Manufacturing checks | `pcb.runDfm`, `pcb.runSmtDfm`, `pcb.checkSameNetPadSpacing` | Check PCB process, SMT placement, or same-net pad spacing. Review each command's coverage and unknowns. |
 | Manufacturing output | `pcb.exportGerber`, `pcb.exportPickPlace` | Export Gerber or placement data. Check each output for the current project. |

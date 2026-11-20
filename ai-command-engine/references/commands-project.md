@@ -2,7 +2,9 @@
 
 Order: verify the window and project → open, create, or import → inspect boards and pages → establish or check schematic and PCB association → read back and save. Apply only the steps in scope.
 
-Use `/help?cmd=<command>` in the verified target window for parameters, responses, and examples. Each `/command` request includes `cmd`, the current top-level `instanceId`, and required `params`; macro steps inherit that instance. Read document-tree UUIDs from `project.getInfo`; do not guess them.
+Use `/help?cmd=<command>` in the verified target window for parameters, responses, and examples. Each `/command` request includes `cmd`, the current top-level `instanceId`, and required `params`. Read document UUIDs from `project.getInfo`.
+
+Macro steps inherit the selected instance and any outer project, document, or tab binding that applies to them. A conflicting step is rejected. For deliberate cross-document workflows, omit the outer document and tab bindings and specify the target on each relevant step.
 
 ## Projects
 

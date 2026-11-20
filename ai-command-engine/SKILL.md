@@ -29,7 +29,7 @@ Before the first PCB write, read these guides in order, then follow the steps in
 1. [Read the Board and Set Rules](references/pcb-01-read-board-and-rules.md)
 2. [Group and Place Components](references/pcb-02-group-and-place.md)
 3. [Route and Tune](references/pcb-03-route-and-tune.md)
-4. [Autoroute and Import SES](references/pcb-04-autoroute-and-import.md)
+4. [Autoroute and Import Results](references/pcb-04-autoroute-and-import.md)
 5. [Add Copper and Silkscreen](references/pcb-05-copper-and-silkscreen.md)
 6. [Verify and Save](references/pcb-06-verify-and-save.md)
 
@@ -59,6 +59,8 @@ Before the first PCB write, read these guides in order, then follow the steps in
 
 | Task | Open directly |
 | --- | --- |
+| Power, ground, reference planes and actual copper | [Power and Ground Tie-In](references/pcb-power-ground-connectivity.md) |
+| Uncertain writes, split or merged routes and recovery | [Write Reconciliation](references/write-reconciliation-and-recovery.md) |
 | Connection, window selection, units, timeout recovery | [Connection and Environment](references/setup.md) |
 | Find command categories | [Command Categories](references/commands-frequency.md) |
 | Draw or edit a schematic | Follow the four stages above. Each stage includes its command index. |

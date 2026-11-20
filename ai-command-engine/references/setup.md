@@ -76,6 +76,9 @@ Commands that register tasks return a `taskId`. If the same task is still runnin
 
 ## Timeouts and Recovery
 
+- A connection listing alone does not confirm that EDA is handling commands. Check the selected instance with `project.getInfo` and confirm the project UUID before opening the board.
+- For bridge timeouts, use the request ID, instance ID and receipt stage to locate the failed step. The outcome may still be unknown. Read the same target after reconnecting before deciding whether to issue another write.
+
 - A client timeout does not cancel the underlying operation. Check `task.list`, `task.get`, and the target content before deciding what to do next.
 - Inspect `error.message`, `partial`, failed items, and unprocessed items. Do not treat partial success as batch completion.
 - Serialize writes per window. Long-running commands that support progress extend their deadline when valid progress arrives; connection ping/pong does not prove task progress.
@@ -89,6 +92,6 @@ Commands that register tasks return a `taskId`. If the same task is still runnin
 
 Before upgrading, finish known operations and save. If a write is still unknown, inspect the current state first. After updating the extension and matching proxy, check the running process path, start time, and connected version.
 
-The plugin health probe scans ports `49720–49729`. The local forwarding layer may wrap a connection failure in HTTP 500; it accepts only the matching proxy health identity. The skill launcher checks the same range before starting another process. For module-library commands, it also requires `moduleLibraryProtocol:1`; an older proxy is skipped and is not stopped. Update the companion skill and extension together to use the merged module features. This checks the proxy capability advertised by its health response, not an EDA or project-file version. Preserve other services and use the returned `baseUrl` for follow-up requests.
+The plugin health probe scans ports `49720–49729`. The local forwarding layer may wrap a connection failure in HTTP 500; it accepts only the matching proxy health identity. The skill launcher checks the same range before starting another process. For module-library and KiRouting commands, it also requires `moduleLibraryProtocol:1` and `kiRoutingProtocol:1`; an older proxy is skipped and is not stopped. Update the companion skill and extension together to use these features. This checks the proxy capability advertised by its health response, not an EDA or project-file version. Preserve other services and use the returned `baseUrl` for follow-up requests.
 
 Background timer throttling can delay timers; timer delay alone does not prove a disconnection. Only handle an old connection or exit an old process after confirming there are no in-flight tasks and completing a connection probe.

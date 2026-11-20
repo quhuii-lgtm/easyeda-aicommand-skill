@@ -48,7 +48,7 @@
 
 - `schematic.setAttribute` 按窗口帮助修改已有属性。目标或参数查找失败属于写入前拒绝；调用开始后的异常、等待或读回未确认应按 `partial:true`、`retryable:false` 处理。先查属性和原调用状态，不直接重放。
 
-- `schematic.moveComponent` 不会移动旧导线。`schematic.autoLayout` 只用于整理已有功能区；先限定目标并运行 `dryRun`，真实运行前保存。`rewire` 会删除并重建相关线；检查跳过线和部分移动。失败时核对 `error.cause.moved` 与现场，不假定回滚。
+- `schematic.moveComponent` 不会移动旧导线。`schematic.autoLayout` 用于整理已有功能区。先限定目标、运行 `dryRun`，执行前保存。启用 `rewire` 时，先核对受影响引脚。目标引脚缺失会停止，外部引脚无法核对时保留相关器件位置和旧线。检查跳过的网络、导线和部分移动结果；失败时核对 `error.cause.moved` 与现场。
 
 ## 命令索引
 
