@@ -74,6 +74,8 @@ Recheck the targets recorded during placement. Use actual component anchors for 
 Run [check-schematic.mjs](../scripts/check-schematic.mjs) with Node.js and pass the design JSON and plugin readback JSON for the same area. Use `alignments` for alignment groups, `maxWidth` or `maxHeight` for area bounds, and `requireStraight` and `maxLength` for two-pin connections. Supply each actual component's `anchor: [x, y]`. Record the applicable targets and why any do not apply.
 
 - For each specified two-pin group, the script reports length and bends on one shortest physical route. Consecutive segments in the same direction count as one run.
+- Use the saved design plan. Declare required direct pin groups in `directGroups: [{ id, endpoints }]` using full pin IDs. Four parallel capacitors require one four-pin group per rail. Separate same-net label stubs do not connect a group physically. If an area needs no direct groups, record why in its `noDirectReason`. Follow the project's exception rules when changing a specific branch and retain the reason.
+- Review same-net label findings on the latest close-up. Try adjusting part orientation or position, or sharing a short wire. Rerun after rework, or record evidence when retaining a finding is justified.
 - Set length, straightness, and optional `maxBends` targets before wiring. Check any route with three or more bends for avoidable detours. Use pin orientation, clearance and the close-up to judge the route.
 - The default is 40 grid cells. A higher page-wide `maxDirectGrids` fails and the script still checks at 40. A lower page-wide limit is allowed.
 - Approve any relaxation before using it. Record the design reason and the user's approval or the expert review that passed it. Pass the separate approval JSON as the third script argument. It contains `page` and `exceptions`. Each exception requires exact two-pin `endpoints`, `maxGrids`, `reason`, `approvedBy`, and `approvalRef`. The script checks the record fields. Verify the approval against its source.
@@ -91,7 +93,7 @@ The skill includes a synthetic A4 example with a straight local connection and a
 node scripts/check-schematic.mjs examples/schematic-audit/design.json examples/schematic-audit/readback.json
 ```
 
-This runs the whole-sheet check. To try preflight and block checks, copy the design JSON and set `stage` to `planning` or `wiring`. The example has one block, so the same readback can be reused for all three stages.
+This example demonstrates the basic checks. Copy the design JSON and set `stage` to `planning` or `wiring` to see the different outputs. For delivery, follow the sheet recheck steps and supply area reports and review evidence.
 In a real drawing, derive the expected JSON from the approved circuit or connection table. Build the actual JSON from a fresh plugin readback of the same scope. Use native `LINE` endpoints for `nodes`, `segments`, and `wirePaths`. Normalize source Y to the API direction. Use the host netlist for pin membership and explicit pin attributes or source markers for NC.
 
 | Exit | Meaning and action |

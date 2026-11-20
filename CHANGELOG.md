@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.20.4
+
+- Require a passing latest-readback whole-sheet report for every completed schematic sheet; update the checker and region-report validation.
+
 ## 2026.11.20.3
 
 - Native-default routing, optional copper keepouts, post-repour connectivity protection, target checks and crystal routing requirements.

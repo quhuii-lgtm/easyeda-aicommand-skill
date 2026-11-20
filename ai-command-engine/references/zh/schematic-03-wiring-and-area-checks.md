@@ -97,6 +97,10 @@
 
 ## 逐区检查后再完成
 
+按开画前保存的清单接线。用 `directGroups: [{ id, endpoints }]` 列出必须直连的完整引脚 ID。四颗并联电容的两侧各列一组，组内有四个引脚。同名标签对应的支线不能代替组内实线。某区没有必连组时，在该区的 `noDirectReason` 写明原因。确需改变连接方式时，按项目已有规则处理，只更新涉及的支路并保留理由。
+
+同网标签候选先看最新局部图。检查能否调整器件朝向、位置或共用短线。能改就改并重跑，确需保留时按现有候选复核方法登记证据。
+
 逐区复查摆放阶段记录的目标。用实际器件锚点检查同列或同行，用引脚和线段读回检查直线、路径长度及区框尺寸。长度目标和 40 格要求分别核对。脚本报告缺少坐标或路径时补读回；文字留白和遮挡用最新局部图确认。返工后对同一区重跑，并再次核对逐脚网络和 NC。
 
 用 Node.js 运行 [check-schematic.mjs](../../scripts/check-schematic.mjs)，传入同一区的设计 JSON 和插件读回 JSON。设计可用 `alignments` 记录对齐组，区框用 `maxWidth` 或 `maxHeight`，两脚直连用 `requireStraight` 和 `maxLength`。对齐使用器件读回的 `anchor: [x, y]`。按当前区记录需要的目标和不适用的理由。
@@ -122,7 +126,7 @@
 node scripts/check-schematic.mjs examples/schematic-audit/design.json examples/schematic-audit/readback.json
 ```
 
-示例默认做整页复验。复制设计 JSON，把 `stage` 改为 `planning` 或 `wiring`，可分别试跑画前预检和逐区验收。示例只有一个功能区，三种模式可共用读回文件。
+示例用于试跑基础检查。复制设计 JSON，把 `stage` 改为 `planning` 或 `wiring`，可查看不同阶段的输出。实际交付按整页复验步骤提交逐区报告和检查证据。
 实际使用时，预期 JSON 取自已确认的电路或连接表。实际 JSON 取同一范围内的最新插件读回。用原生 `LINE` 的端点构建 `nodes`、`segments` 和 `wirePaths`，将源码 Y 转为接口坐标。网表用于核对逐脚网络，NC 以显式引脚属性或源码标记为准。
 
 | 退出码 | 含义及处理 |

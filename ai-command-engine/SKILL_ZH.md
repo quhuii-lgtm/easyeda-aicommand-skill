@@ -17,7 +17,8 @@ description: 通过本地 HTTP 指令查询、绘制、修改和检查嘉立创 
 4. [整页验收与交付](references/zh/schematic-04-acceptance-and-delivery.md)
 
 - 按“画功能框和标题 → 布置器件并读真实引脚 → 逐区接线 → 每区完成后运行脚本验收 → 每页完成后再次运行脚本并整页复验”执行。
-- 技能自带 [check-schematic.mjs](scripts/check-schematic.mjs)，用于逐功能区验收和整页复验。 见[可运行示例](references/zh/schematic-03-wiring-and-area-checks.md#可运行示例与结果判读)。
+- 开画前保存功能区和必连引脚清单。
+- 每画完一张原理图，必须用 [check-schematic.mjs](scripts/check-schematic.mjs) 做整页验收并保存该页报告。报告通过后才可交付该页。
 - 新绘功能区必须实际画框和标题；已有图纸只在授权范围内补画或调整。
 - 区内相近同网引脚按要求就近直连，包括 GND；不能为省事全部改成标签。
 - 按[原理图完成检查](references/zh/schematic-04-acceptance-and-delivery.md#原理图完成检查)逐项验收并报告依据；电气与图面分别判断，整图交付保存重开读回，未检查项不能报通过。

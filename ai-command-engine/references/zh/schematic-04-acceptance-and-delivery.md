@@ -36,6 +36,7 @@
 | 直连长度 | 网格已知时累计全部折线段；分支按所有端点对的最短路径中最长值检查，不逐段套用长度限制。 | 满足默认40格和避让要求；网格未知时说明采用的估算及图面核对，长度条款标为未完成，不能冒充精确检查通过。 |
 | 实际连接 | 对照连接表逐项比较“位号＋脚号→网络”和网络成员，用 `getNetlist` 核对实际连通，用 `listNetLabels` 核对附着及网名；NC按引脚属性或当前有效源码确认。 | 应接、禁接、NC、连接器针序和电气类型符合要求；无漏接、误接或意外并网，不能只比较网名是否存在，也不能把网表未出现的脚当作已设NC。 |
 | ERC/DRC与结构 | 运行 `runDrcDetailed` 及适用的 `structuralAudit`，记录检查图页和范围，逐条核对错误、告警、排除对象及碰撞候选。 | 无未解决错误；其余告警已修复或按项目已确认的处理方式记录。候选未看图、返回结构未知或检查不完整时不判通过。 |
+| 每页脚本验收 | 每画完一张原理图，用该页最新读回运行 [检查脚本](../../scripts/check-schematic.mjs) 的 `sheet` 阶段。 | 每页均有独立的通过报告（`status: "pass"`）。未跑、失败或待核实的图页暂不交付。 |
 | 图面和保存 | 查看修改后每区放大图及整页图，确认分区和阅读顺序；按下节保存并核对实际保存内容。 | 局部及整页检查完成，保存对象与验收对象一致；旧截图、整页缩略图、调用成功或DRC为0均不能代替检查。 |
 
 - 方案要求的烧录入口、测试点和0Ω可拆连接逐项核对；不适用时注明，不额外增加电路。
@@ -60,12 +61,17 @@
 
 若本轮删除独立文字，在设计的 `deletedTextIds` 记录目标 ID。重开后将本页完整 TEXT ID 列表写入读回的 `reopenedTexts: { pageId, ids, evidence }`。旧 ID 仍在时脚本报失败。保存前的删除回包只用来核对即时结果。
 
-每个功能区完成后，必须用 [check-schematic.mjs](../../scripts/check-schematic.mjs) 验收。以 `stage: "wiring"` 检查该区的预期与最新读回，并核对局部图。保存该区报告，修正失败项并补齐必检项后再通过。
-页面所有功能区通过后，必须以 `stage: "sheet"` 对整页的预期与读回再运行一次脚本。结合整页图、DRC 和保存重开证据复验，再按项目约定提交页面验收。
+逐区检查完成后，按下列步骤运行 [check-schematic.mjs](../../scripts/check-schematic.mjs) 做整页复验。单页工程也须保留整页报告。
+
+1. **沿用画前清单。** 设计 JSON 填 `pageId` 和 `requiredRegionReviews`。新页列出全部功能区。修改页列出改动及受影响的区，并在其他区的 `regions` 记录中标 `unchanged: true`。每区器件在 `components` 中用 `region` 关联。逐脚填 `pins`，并明确填写 `directGroups`。
+2. **逐区检查。** 以 `stage: "wiring"` 和 `auditRegion` 选区。读回该区的器件、引脚和导线。其他区涉及的接点和路径也要保留在线路读回中。查看最新局部图，将结论和证据路径填入 `drawingReview: { status, evidence }`。保留完整报告。修正失败和补齐待核实项后再复验。
+3. **整页复验。** 切换到 `stage: "sheet"` 并去掉 `auditRegion`。用整页读回填 `regionReadbacks: [{ id, readback }]`，其中每项是从当前图页整理出的同范围逐区读回。把脚本逐区输出的 `regionReport` 原样放进 `regionReports`。漏报、未通过或图元发生变化时，重跑对应的区。整页图面、ERC/DRC 和保存重开分别填 `drawingReview`、`hostReview` 和 `persistenceReview`。每项写 `status` 和 `evidence`，再按项目约定提交。
+
+区框读回填实际 `frameIds`、`titleId`、`bounds` 和 `titleAnchor`。确认没有边框时填 `frameIds: []`。边框和标题已完整查询才填 `coverage.regions: true`。引脚节点和导线已完整查询才填 `coverage.wires: true`。孤立引脚也保留节点。同名标签之间不添加线段。逐区和整页读回用同样的字段和对象 ID，重检时保持相同的数组顺序。图面、DRC 和保存仍须实际检查后填写。
 涉及跨页连接时，保存后关闭并重开涉及的图页。按图页 ID 逐页读取宿主网表，核对全部跨页网的成员集合。
 成员用位号和脚号标识。逐网查漏接、多接和串网，保留每次读回来源。只有项目完整网表时，可逐页读完整网表并比较全部网络。
 
-沿用 `layoutPlan` 时，整页读回 JSON 填 `blockReviews: [{ id, status, evidence }]` 和 `sheetReview: { status, evidence }`。
+使用 `layoutPlan` 时，整页继续核对实际纸型、区框和保留空间。
 通过填 `pass`，失败填 `fail`，缺少记录留为未完成。`evidence` 填实际读回及图面的引用。
 设计 JSON 用 `crossPage: { pageIds, nets }` 列出涉及页和独立预期网表。读回 JSON 用 `reopenedPages: [{ id, evidence, nets }]` 保存逐页重开后读取结果。
 两边的 `nets` 都用 `[{ net, pins }]`，`pins` 为位号与脚号列表。预期和实际须覆盖相同范围，并保留实际读回中额外出现的网络或成员。

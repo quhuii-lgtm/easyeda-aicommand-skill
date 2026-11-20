@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const script = fileURLToPath(new URL('../ai-command-engine/scripts/check-schematic.mjs', import.meta.url));
+const script = process.argv[2] ?? fileURLToPath(new URL('../ai-command-engine/scripts/check-schematic.mjs', import.meta.url));
 const temp = mkdtempSync(join(tmpdir(), 'ace-schematic-audit-'));
 const designPath = join(temp, 'design.json');
 const snapshotPath = join(temp, 'snapshot.json');
@@ -43,11 +43,16 @@ const snapshot = {
 function run(edit, code, stage, designOverrides = {}) {
 	const sample = structuredClone(snapshot);
 	edit(sample);
-	writeFileSync(designPath, JSON.stringify({ ...design, stage, ...designOverrides }));
-	writeFileSync(snapshotPath, JSON.stringify(sample));
+	const result = audit({ ...design, stage, ...designOverrides }, sample, code);
+	return code === 2 ? result : result.checks;
+}
+
+function audit(plan, readback, code) {
+	writeFileSync(designPath, JSON.stringify(plan));
+	writeFileSync(snapshotPath, JSON.stringify(readback));
 	const result = spawnSync(process.execPath, [script, designPath, snapshotPath], { encoding: 'utf8' });
 	assert.equal(result.status, code, result.stderr || result.stdout);
-	return code === 2 ? result.stderr : JSON.parse(result.stdout).checks;
+	return code === 2 ? result.stderr : JSON.parse(result.stdout);
 }
 
 try {
@@ -187,7 +192,100 @@ try {
 	const missingReview = run(s => { withReadbacks(s); s.blockReviews.pop(); }, 3, 'sheet', scope);
 	assert.equal(missingReview.find(c => c.item === 'block-self-review' && c.scope === 'control').status, 'incomplete');
 
-	console.log('PASS schematic audit: complete readback subset, six defects, disconnected wire, missing evidence, page mismatch, duplicate identity');
+	const caps = ['C1', 'C2', 'C3', 'C4'];
+	const rails = ['3V3', 'GND'];
+	const components = caps.map(ref => ({ ref, region: 'caps', attributes: { value: '100n' } }));
+	const pins = rails.flatMap((net, i) => caps.map(ref => ({ pin: `${ref}.${i + 1}`, net, nc: false })));
+	const groups = rails.map(net => ({ id: net, endpoints: pins.filter(pin => pin.net === net).map(pin => pin.pin) }));
+	const staged = {
+		page: 'bypass capacitors', pageId: 'bypass', requiredRegionReviews: ['caps'], auditRegion: 'caps', stage: 'wiring',
+		regions: [{ id: 'caps', title: 'Bypass capacitors' }], components, pins, directGroups: groups,
+		branches: [{ id: 'rail', kind: 'decoupling', connections: groups.map(g => ({ net: g.id, pins: g.endpoints })) }],
+	};
+	const readback = {
+		page: staged.page, pageId: staged.pageId, coverage: { regions: true, wires: true },
+		regions: [{ ...staged.regions[0], frameIds: ['frame'], titleId: 'title', bounds: [0, 0, 100, 100], titleAnchor: [10, 90] }],
+		components: components.map((c, i) => ({ ref: c.ref, attributes: c.attributes, bounds: [10 + i * 5, 20, 14 + i * 5, 25] })),
+		pins, grid: 1,
+		wiringPins: pins.map(({ pin, net }, i) => ({ pin, ref: pin.split('.')[0], net, x: 10 + (i % 4) * 5,
+			y: i < 4 ? 30 : 20, side: i < 4 ? 'up' : 'down', region: 'caps', island: net, label: false })),
+		wirePaths: [],
+		drawingReview: { status: 'pass', evidence: 'area.png' },
+	};
+	readback.nodes = readback.wiringPins.map(({ pin, x, y }) => ({ id: pin, x, y }));
+	readback.segments = groups.flatMap(g => g.endpoints.slice(1).map((pin, i) => ({ a: g.endpoints[i], b: pin, length: 5 })));
+	const noFrame = audit({ ...staged, stage: 'regions' }, { ...readback, regions: [{ ...readback.regions[0], frameIds: [] }] }, 1);
+	assert.equal(noFrame.checks.find(c => c.item === 'functional-area').status, 'fail');
+	const unreadFrame = audit({ ...staged, stage: 'regions' }, { ...readback, coverage: { regions: false }, regions: [] }, 3);
+	assert.equal(unreadFrame.checks.find(c => c.item === 'functional-area').status, 'incomplete');
+	const labeled = structuredClone(readback);
+	labeled.segments = labeled.wiringPins.map(p => {
+		Object.assign(p, { island: p.pin, label: true });
+		labeled.nodes.push({ id: `label:${p.pin}`, x: p.x, y: p.y + 2 });
+		return { a: p.pin, b: `label:${p.pin}`, length: 2 };
+	});
+	const labelReport = audit(staged, labeled, 1);
+	assert.equal(labelReport.checks.filter(c => c.item === 'direct-wire' && c.status === 'fail').length, 2);
+	assert.ok(labelReport.checks.filter(c => c.item === 'pin-net').every(c => c.status === 'pass'));
+	const unreadWire = audit(staged, { ...labeled, coverage: { regions: true, wires: false } }, 3);
+	assert.equal(unreadWire.checks.find(c => c.item === 'direct-wire').status, 'incomplete');
+	const omitted = audit({ ...staged, directGroups: [] }, readback, 3);
+	assert.equal(omitted.checks.find(c => c.item === 'direct-plan').status, 'incomplete');
+	const noDirect = { ...staged, directGroups: [], regions: [{ ...staged.regions[0], noDirectReason: 'Fixture without required direct groups' }] };
+	assert.equal(audit(noDirect, readback, 0).checks.find(c => c.item === 'direct-plan').status, 'pass');
+	const areaReport = audit(staged, readback, 0).regionReport;
+	const { auditRegion, ...sheetPlan } = { ...staged, stage: 'sheet' };
+	const sheet = {
+		...readback, regionReadbacks: [{ id: auditRegion, readback }],
+		hostReview: { status: 'pass', evidence: 'DRC.json' }, persistenceReview: { status: 'pass', evidence: 'reopened.json' },
+	};
+	const missing = audit(sheetPlan, sheet, 3);
+	assert.equal(missing.checks.find(c => c.item === 'region-report').status, 'incomplete');
+	sheet.regionReports = [areaReport];
+	assert.equal(audit(sheetPlan, sheet, 0).checks.find(c => c.item === 'region-report').status, 'pass');
+	const paper = { id: staged.pageId, paper: 'A4', bounds: [0, 0, 300, 200], reserved: [[0, 150, 300, 200]] };
+	audit({ ...sheetPlan, layoutPlan: { currentPageId: staged.pageId, pages: [paper],
+		blocks: [{ id: auditRegion, pageId: staged.pageId, bounds: readback.regions[0].bounds }] } },
+	{ ...sheet, pageFrame: { paper: paper.paper, bounds: paper.bounds } }, 0);
+	const changedSheet = structuredClone(sheet);
+	changedSheet.regionReadbacks[0].readback.nodes[0].x++;
+	assert.equal(audit(sheetPlan, changedSheet, 3).checks.find(c => c.item === 'region-report').status, 'incomplete');
+	const changedPlan = structuredClone(sheetPlan);
+	changedPlan.maxAdjacentGap = 19;
+	assert.equal(audit(changedPlan, sheet, 3).checks.find(c => c.item === 'region-report').status, 'incomplete');
+	assert.equal(audit(sheetPlan, { ...sheet, regionReports: [{ ...areaReport, status: 'fail' }] }, 1)
+		.checks.find(c => c.item === 'region-report').status, 'fail');
+	const staleArea = structuredClone(sheet);
+	staleArea.components[0].bounds[0]++;
+	assert.equal(audit(sheetPlan, staleArea, 3).checks.find(c => c.item === 'region-report').status, 'incomplete');
+
+	const other = { id: 'control', title: 'Control', noDirectReason: 'This area only has an isolated test point' };
+	const otherComponent = { ref: 'TP1', region: other.id, attributes: { value: 'Test point' } };
+	const otherPin = { pin: 'TP1.1', net: null, nc: true };
+	const otherReadback = {
+		page: staged.page, pageId: staged.pageId, coverage: readback.coverage, grid: 1,
+		regions: [{ ...other, frameIds: ['frame-control'], titleId: 'title-control', bounds: [110, 0, 180, 100], titleAnchor: [115, 90] }],
+		components: [{ ref: otherComponent.ref, attributes: otherComponent.attributes, bounds: [120, 20, 125, 25] }],
+		pins: [otherPin], nodes: [{ id: otherPin.pin, x: 125, y: 20 }], segments: [], wirePaths: [],
+		wiringPins: [{ ...otherPin, ref: otherComponent.ref, x: 125, y: 20, side: 'right', region: other.id }],
+		drawingReview: { status: 'pass', evidence: 'control.png' },
+	};
+	const twoRegions = {
+		...sheetPlan, requiredRegionReviews: ['caps', other.id], regions: [...sheetPlan.regions, other],
+		components: [...sheetPlan.components, otherComponent], pins: [...sheetPlan.pins, otherPin],
+	};
+	const otherReport = audit({ ...twoRegions, stage: 'wiring', auditRegion: other.id }, otherReadback, 0).regionReport;
+	const linkedSheet = {
+		...sheet, regionReadbacks: [...sheet.regionReadbacks, { id: other.id, readback: otherReadback }],
+		...Object.fromEntries(['regions', 'components', 'pins', 'wiringPins', 'nodes'].map(key => [key, [...sheet[key], ...otherReadback[key]]])),
+	};
+	assert.equal(audit(twoRegions, linkedSheet, 3).checks.find(c => c.item === 'region-report' && c.scope === other.id).status, 'incomplete');
+	assert.match(audit({ ...twoRegions, requiredRegionReviews: ['caps'] }, linkedSheet, 2), /every planned/);
+	assert.equal(audit(twoRegions, { ...linkedSheet, regionReports: [areaReport, otherReport] }, 0).checks
+		.filter(c => c.item === 'region-report' && c.status === 'pass').length, 2);
+	const existingSheet = { ...twoRegions, requiredRegionReviews: ['caps'], regions: [twoRegions.regions[0], { ...other, unchanged: true }] };
+	assert.equal(audit(existingSheet, linkedSheet, 0).checks.filter(c => c.item === 'region-report').length, 1);
+	console.log('PASS schematic audit: legacy checks, missing frame, four capacitors with label-only stubs, missing/stale region report, staged delivery');
 } finally {
 	rmSync(designPath, { force: true });
 	rmSync(snapshotPath, { force: true });

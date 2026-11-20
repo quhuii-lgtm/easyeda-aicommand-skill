@@ -30,7 +30,7 @@ Specific part requirements are maintained in `component-pcb-profiles`. Check the
 | Decoupling and power | Keep decoupling near the supply pin with short, direct connections and a compact return. Check the actual loop through pads, vias and return copper. |
 | Power conversion | Arrange input, conversion, and output paths; check high-frequency loops, bootstrap, feedback, and thermal space. |
 | Driver and power switch | Check driver and switching loops; keep power paths from interfering with gate and sensing paths. |
-| Crystal and clock | Place the crystal oscillator close to the MCU clock pins and away from switching nodes, PWM, and high-current paths. Place each load capacitor close to its corresponding MCU clock pin, with its signal terminal facing the MCU. Preserve an approved crystal orientation. Leave a clear route from the MCU to the crystal and check body, pad and silkscreen clearances against the project requirements. |
+| Crystal and clock | Place the crystal oscillator close to the MCU clock pins and away from switching nodes, PWM, and high-current paths. Orient the load capacitors for short direct connections to their respective MCU pins. Preserve an approved crystal orientation. Leave a clear route from the MCU to the crystal and check body, pad and silkscreen clearances against the project requirements. |
 | Communication interface | Place protection, termination, and branches according to their function and interface topology. |
 | Protection and freewheeling | Check the relationship among protection point, fault source, return, and protected path. |
 | Analog and sensing | Keep inputs, references, and filters away from interference; match sensor position and axis to the measurement goal. |

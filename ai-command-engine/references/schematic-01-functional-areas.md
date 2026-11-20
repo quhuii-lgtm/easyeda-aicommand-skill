@@ -23,8 +23,8 @@ Keep the plan for subsequent stages so the checker can compare the actual block 
 
 Use these steps for new drawings and the scope of the current edit. Reuse correct existing content; do not ask the user to confirm each step.
 
-1. Read the target page and current state. List the functional areas, their components, pin nets, and allowed NC pins in scope.
-2. For each new area, draw a box with a title before placing components. A name in a plan or components alone do not count as a drawn area. Reuse an existing box and title when they meet the requirements.
+1. Read the target page. From the source and requirements, list the areas, components, pin nets, allowed NC pins, and required direct pin groups. Save the design JSON before drawing and use it for acceptance. On an existing sheet, include the changed and affected areas.
+2. Draw the frame and title for each new area. With `stage: "regions"` and `auditRegion`, verify the actual frame, title, and location before placing components. Reuse an existing frame and title when they meet the requirements.
 3. After placement, read back actual designators, pin endpoints, and orientations. Arrange components, branches, and text before wiring.
 4. In each area, use nearby direct wires, bus wires, or labels as appropriate. If a command or macro default does not meet the requirements, use a suitable connection command.
 5. After each area, check its box, title, component membership, wires, and label attachments; inspect an enlarged current image. Correct missing boxes, wires through symbols, obscured text, or extra labels within the authorized scope before continuing.

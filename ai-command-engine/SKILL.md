@@ -17,7 +17,8 @@ Before the first schematic write, read the four stage guides in order. Then perf
 4. [Verify and Deliver the Schematic](references/schematic-04-acceptance-and-delivery.md)
 
 - Follow this order: draw functional-area boxes and titles → place components and read actual pins → wire one area at a time → run the checker to accept each completed area → run the checker again and review the completed sheet.
-- The skill ships with [check-schematic.mjs](scripts/check-schematic.mjs) for per-block and whole-sheet schematic checks. See the [runnable example](references/schematic-03-wiring-and-area-checks.md#runnable-example-and-result-codes).
+- Save the area and required pin-connection plan before drawing.
+- After drawing each schematic sheet, run [check-schematic.mjs](scripts/check-schematic.mjs) on the full sheet and keep its report. Deliver the sheet only after the report passes.
 - Every new functional area must have an actual box and title. Edit existing drawings only within the authorized scope.
 - Directly connect nearby pins on the same net within an area, including GND. Do not replace these connections with one label per pin for convenience.
 - Use the unified [Schematic Completion Checks](references/schematic-04-acceptance-and-delivery.md#schematic-completion-checks). Report electrical connectivity and visual layout separately. For whole-schematic delivery, save, reopen, and read back. Do not report unchecked items as passing.

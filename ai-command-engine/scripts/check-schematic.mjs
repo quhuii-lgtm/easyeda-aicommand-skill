@@ -42,6 +42,79 @@ function hasText(value) {
 	return typeof value === 'string' && Boolean(value.trim());
 }
 
+function fingerprint(value) {
+	return createHash('sha256').update(JSON.stringify(value, (_, entry) =>
+		entry && typeof entry === 'object' && !Array.isArray(entry)
+			? Object.fromEntries(Object.keys(entry).sort().map(key => [key, entry[key]])) : entry)).digest('hex');
+}
+
+function regionDesign(design, id) {
+	const { stage, auditRegion, requiredRegionReviews, layoutPlan, crossPage, deletedTextIds, ...plan } = design;
+	const components = plan.components?.filter(component => component.region === id);
+	const refs = new Set(components?.map(component => component.ref));
+	const ownsPin = pin => typeof pin === 'string' && refs.has(pin.slice(0, pin.lastIndexOf('.')));
+	return {
+		...plan, regions: plan.regions.filter(region => region.id === id), components,
+		pins: plan.pins?.filter(({ pin }) => ownsPin(pin)),
+		directGroups: plan.directGroups?.filter(group => group.endpoints?.some(ownsPin)),
+		branches: plan.branches?.filter(branch => branch.connections?.some(connection => connection.pins?.some(ownsPin))),
+		alignments: plan.alignments?.filter(alignment => alignment.refs?.some(ref => refs.has(ref))),
+		substitutions: plan.substitutions?.filter(substitution => refs.has(substitution.ref)),
+	};
+}
+
+function regionFingerprint(design, snapshot, id, wireExceptions) {
+	const { candidateReviews, drawingReview, ...readback } = snapshot;
+	return {
+		id,
+		planHash: fingerprint([regionDesign(design, id), wireExceptions]),
+		readbackHash: fingerprint(readback),
+	};
+}
+
+function checkReview(item, scope, review) {
+	const status = review?.status === 'fail' ? 'fail'
+		: review?.status === 'pass' && hasText(review.evidence) ? 'pass' : 'incomplete';
+	report(item, scope, status, review?.evidence, status === 'pass' ? '' : 'Record the result and evidence from this readback');
+}
+
+function regionMatchesSheet(region, sheet) {
+	for (const [field, key] of Object.entries({ components: 'ref', pins: 'pin', wiringPins: 'pin', nodes: 'id', wirePaths: 'id' })) {
+		const local = region[field];
+		const full = index(sheet[field], key, `snapshot.${field}`);
+		if (!Array.isArray(local) || !full || local.some(record => !full.has(record?.[key])
+			|| fingerprint(record) !== fingerprint(full.get(record[key])))) return false;
+	}
+	if (!Array.isArray(region.segments) || !Array.isArray(sheet.segments) || region.grid !== sheet.grid) return false;
+	const nodes = new Set(region.nodes.map(node => node.id));
+	const segmentHashes = segments => segments.map(fingerprint).sort();
+	const touching = sheet.segments.filter(({ a, b }) => nodes.has(a) || nodes.has(b));
+	return fingerprint(segmentHashes(region.segments)) === fingerprint(segmentHashes(touching));
+}
+
+function checkRegionReports(design, snapshot, ids, wireExceptions) {
+	const readbacks = index(snapshot.regionReadbacks, 'id', 'snapshot.regionReadbacks');
+	const reports = index(snapshot.regionReports, 'id', 'snapshot.regionReports');
+	const sheetRegions = index(snapshot.regions, 'id', 'snapshot.regions');
+	for (const id of ids) {
+		const fresh = readbacks?.get(id)?.readback;
+		const prior = reports?.get(id);
+		const frame = sheetRegions?.get(id);
+		if (!fresh || fresh.page !== design.page || fresh.pageId !== design.pageId
+			|| !frame || !Array.isArray(fresh.regions) || fingerprint(fresh.regions) !== fingerprint([frame])
+			|| !regionMatchesSheet(fresh, snapshot)) {
+			report('region-report', id, 'incomplete', '', 'Supply a fresh readback for this region from the current sheet');
+			continue;
+		}
+		const current = regionFingerprint(design, fresh, id, wireExceptions);
+		const matches = prior?.planHash === current.planHash && prior?.readbackHash === current.readbackHash;
+		const status = !matches ? 'incomplete' : prior.status === 'fail' ? 'fail'
+			: prior.status === 'pass' && hasText(prior.drawingEvidence) ? 'pass' : 'incomplete';
+		report('region-report', id, status, current,
+			status === 'pass' ? '' : 'Run the wiring check for this region using the current plan and readback');
+	}
+}
+
 function checkDeletedTexts(design, snapshot) {
 	const expected = design.deletedTextIds;
 	if (expected === undefined) return;
@@ -201,11 +274,11 @@ function checkSheetPlan(design, snapshot, stage) {
 		report('actual-block-fit', block.id, status, { planned: block.bounds, actual: bounds });
 	}
 	if (stage !== 'sheet') return;
-	const sheet = snapshot.sheetReview;
+	const sheet = design.requiredRegionReviews === undefined ? snapshot.sheetReview : snapshot.drawingReview ?? snapshot.sheetReview;
 	const sheetStatus = sheet?.status === 'fail' ? 'fail'
 		: sheet?.status === 'pass' && nonempty(sheet.evidence) ? 'pass' : 'incomplete';
 	const reviews = index(snapshot.blockReviews, 'id', 'snapshot.blockReviews');
-	for (const block of current) {
+	for (const block of design.requiredRegionReviews === undefined ? current : []) {
 		const review = reviews?.get(block.id);
 		const status = review?.status === 'fail' ? 'fail'
 			: review?.status === 'pass' && nonempty(review.evidence) ? 'pass' : 'incomplete';
@@ -320,9 +393,18 @@ function checkCompactness(id, want, got) {
 	}
 }
 
-function checkRegions(design, snapshot) {
+function checkRegions(design, snapshot, staged) {
 	const regions = index(snapshot.regions, 'id', 'snapshot.regions');
-	compare('functional-area', index(design.regions, 'id', 'design.regions'), regions, (id, want, got) => {
+	const complete = !staged || snapshot.coverage?.regions === true;
+	compare('functional-area', index(design.regions, 'id', 'design.regions'), complete ? regions : null, (id, want, got) => {
+		if (staged && ((Array.isArray(got.frameIds) && !got.frameIds.length) || got.titleId === null)) {
+			report('functional-area', id, 'fail', '', 'The region has no drawn frame or title');
+			return;
+		}
+		if (staged && (!Array.isArray(got.frameIds) || !got.frameIds.every(hasText) || !hasText(got.titleId))) {
+			report('functional-area', id, 'incomplete', '', 'Actual frame and title object IDs are required');
+			return;
+		}
 		if (typeof want.title !== 'string' || !want.title.trim() || !validBox(got.bounds)) {
 			report('functional-area', id, 'incomplete', '', 'Expected title or actual box geometry is missing');
 		} else {
@@ -488,19 +570,23 @@ function wirePolicy(design) {
 	return (a, b) => exceptions.get(pairKey(a, b))?.maxGrids ?? limit;
 }
 
-function checkWires(design, snapshot, limitFor) {
+function checkWires(design, snapshot, limitFor, staged) {
 	const groups = index(design.directGroups, 'id', 'design.directGroups');
 	if (!groups) {
 		report('direct-wire', 'page', 'incomplete', '', 'Expected direct-connection groups are missing');
 		return;
 	}
-	if (!groups.size) {
+	if (!groups.size && !staged) {
 		report('direct-wire', 'page', 'not-applicable', 'Design declares no required direct groups');
 		return;
 	}
 	const nodes = index(snapshot.nodes, 'id', 'snapshot.nodes');
-	if (!nodes || !Array.isArray(snapshot.segments)) {
+	if (!nodes || !Array.isArray(snapshot.segments) || (staged && snapshot.coverage?.wires !== true)) {
 		report('direct-wire', 'page', 'incomplete', '', 'Physical wire graph is missing');
+		return;
+	}
+	if (!groups.size) {
+		report('direct-wire', 'page', 'not-applicable', 'Design declares no required direct groups');
 		return;
 	}
 	const graph = new Map([...nodes.keys()].map(id => [id, []]));
@@ -750,32 +836,67 @@ try {
 	}
 	const stage = design.stage ?? 'sheet';
 	if (!['planning', 'regions', 'placement', 'wiring', 'sheet'].includes(stage)) throw new Error('Invalid audit stage');
-	checkSheetPlan(design, snapshot, stage);
-	const regions = stage === 'planning' ? null : checkRegions(design, snapshot);
+	const required = design.requiredRegionReviews;
+	const staged = required !== undefined;
+	const region = design.auditRegion;
+	if (staged) {
+		if (!hasText(design.pageId) || design.pageId !== snapshot.pageId) throw new Error('Staged audit requires the same actual page ID');
+		const planned = index(design.regions, 'id', 'design.regions');
+		if (!Array.isArray(required) || !required.length || new Set(required).size !== required.length
+			|| required.some(id => !planned?.has(id) || planned.get(id).unchanged === true)
+			|| [...(planned?.values() ?? [])].some(item => item.unchanged !== true && !required.includes(item.id))) {
+			throw new Error('List every planned new, changed or affected region in requiredRegionReviews');
+		}
+		if (region !== undefined && (!required.includes(region) || !['regions', 'placement', 'wiring'].includes(stage))
+			|| stage === 'wiring' && !required.includes(region)) throw new Error('Select one planned auditRegion for the wiring check');
+		for (const id of region ? [region] : required) {
+			const local = regionDesign(design, id);
+			const reason = planned.get(id).noDirectReason;
+			const complete = Array.isArray(local.directGroups) && (local.directGroups.length > 0 || hasText(reason));
+			report('direct-plan', id, complete ? 'pass' : 'incomplete',
+				complete ? { groups: local.directGroups.map(group => group.id), reason } : '',
+				complete ? '' : 'List required direct groups before drawing, or record why this region has none');
+		}
+	} else if (region !== undefined) throw new Error('auditRegion requires requiredRegionReviews');
+	const expected = region ? regionDesign(design, region) : design;
+	if (!region) checkSheetPlan(expected, snapshot, stage);
+	const regions = stage === 'planning' ? null : checkRegions(expected, snapshot, staged);
 	if (stage !== 'regions' && stage !== 'planning') {
-		checkComponents(design, snapshot, regions);
-		checkAlignment(design, snapshot);
+		checkComponents(expected, snapshot, regions);
+		checkAlignment(expected, snapshot);
 	}
+	let wireExceptions = [];
 	if (stage === 'wiring' || stage === 'sheet') {
-		const limitFor = wirePolicy(design);
-		checkPins(design, snapshot);
-		checkSubstitutions(design, snapshot);
-		checkWires(design, snapshot, limitFor);
-		checkLabelWiring(design, snapshot);
-		checkLongWires(design, snapshot, limitFor);
-		report('drawing-style', 'page', 'incomplete', '', 'Review label anchors, pin exit directions, clearance, and text legibility separately');
+		const limitFor = wirePolicy(expected);
+		wireExceptions = checks.filter(check => check.item === 'wire-exception').map(check => check.evidence);
+		checkPins(expected, snapshot);
+		checkSubstitutions(expected, snapshot);
+		checkWires(expected, snapshot, limitFor, staged);
+		checkLabelWiring(expected, snapshot);
+		checkLongWires(expected, snapshot, limitFor);
+		if (staged) checkReview('drawing-style', region ?? 'page', snapshot.drawingReview ?? (stage === 'sheet' ? snapshot.sheetReview : null));
+		else report('drawing-style', 'page', 'incomplete', '', 'Review label anchors, pin exit directions, clearance, and text legibility separately');
 	}
 	if (stage === 'sheet') {
 		checkReopenedNets(design, snapshot);
 		checkDeletedTexts(design, snapshot);
-		report('erc-drc-and-structure', 'page', 'incomplete', '', 'Run and review the host checks separately');
-		report('visual-and-persistence', 'page', 'incomplete', '', 'Review the drawing and save/reopen evidence separately');
+		if (staged) {
+			checkRegionReports(design, snapshot, required, wireExceptions);
+			checkReview('erc-drc-and-structure', 'page', snapshot.hostReview);
+			checkReview('visual-and-persistence', 'page', snapshot.persistenceReview);
+		} else {
+			report('erc-drc-and-structure', 'page', 'incomplete', '', 'Run and review the host checks separately');
+			report('visual-and-persistence', 'page', 'incomplete', '', 'Review the drawing and save/reopen evidence separately');
+		}
 	}
 	const candidateReview = reviewCandidates(snapshot);
 	const status = checks.some(check => check.status === 'fail') ? 'fail'
 		: checks.some(check => check.status === 'incomplete'
 			|| (check.status === 'candidate' && check.review?.status !== 'retained')) ? 'incomplete' : 'pass';
-	console.log(JSON.stringify({ page: design.page, stage, status, checks, candidateReview }, null, 2));
+	const regionReport = stage === 'wiring' && region ? {
+		...regionFingerprint(design, snapshot, region, wireExceptions), status, drawingEvidence: snapshot.drawingReview?.evidence,
+	} : undefined;
+	console.log(JSON.stringify({ page: design.page, stage, status, checks, candidateReview, regionReport }, null, 2));
 	process.exitCode = status === 'fail' ? 1 : status === 'incomplete' ? 3 : 0;
 } catch (error) {
 	console.error(error.message);
