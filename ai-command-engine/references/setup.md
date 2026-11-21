@@ -77,7 +77,8 @@ Commands that register tasks return a `taskId`. If the same task is still runnin
 ## Timeouts and Recovery
 
 - A connection listing alone does not confirm that EDA is handling commands. Check the selected instance with `project.getInfo` and confirm the project UUID before opening the board.
-- For bridge timeouts, use the request ID, instance ID and receipt stage to locate the failed step. The outcome may still be unknown. Read the same target after reconnecting before deciding whether to issue another write.
+- For bridge timeouts, check the request ID, instance ID, and dispatch stage. A write canceled in the queue was never sent. For a dispatched write with an unknown outcome, the proxy pauses subsequent writes on that instance and keeps read-only queries available.
+- A valid final result from the original connection can resume writes. If no final result arrives, verify the task has reached a terminal state, or verify the old window has exited and read back the same project and page from an independent window. Then use `write.acknowledge` with the original request ID and the confirmation fields in help. After a proxy process restart, recheck outstanding requests because the pause record lives in memory.
 
 - A client timeout does not cancel the underlying operation. Check `task.list`, `task.get`, and the target content before deciding what to do next.
 - Inspect `error.message`, `partial`, failed items, and unprocessed items. Do not treat partial success as batch completion.

@@ -9,7 +9,7 @@ Macro steps inherit the selected instance and any outer project, document, or ta
 ## Projects
 
 - `project.getInfo` reads the current project and document tree, `project.getInfoOf` reads a specified project, and `project.list` lists projects. Check scope and team if results are unexpected.
-- `project.create` creates a project. `project.open` switches to a specified project. Before opening, save the current project or confirm that unsaved work can be discarded; valid targets do not preserve unsaved content in the old project.
+- `project.create` creates a project. `project.open` opens the specified project. Resolve unsaved work before opening. Switch pages on the current connection only after `activationConfirmed: true`. If the host opens the project in another window, refresh connections and verify the active page.
 - `project.moveToFolder` moves a project; an empty folder means the root. Check project UUID and location before and after.
 - `project.exportFile` exports the native project. It requires project download permission. Verify the exported file.
 - `project.importFile` imports a base64 file and creates a project. Supported formats include `.PcbDoc`, `.SchDoc`, `.epro`, and `.epro2`; `fileType` may be inferred from the extension. Check for duplicate names in the current team. For online `.epro2`, an omitted `newProjectName` is derived only from root `project2.json.title`; the importer does not guess from the filename, append a suffix, or overwrite a same-name project. Provide a name if derivation is unavailable or conflicts. For online `.epro2` only, root `description` is copied as-is. Import is Beta; lossless import and saved PCB routing/copper are not guaranteed.

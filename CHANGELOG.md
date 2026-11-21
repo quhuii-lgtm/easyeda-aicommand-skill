@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026.11.21.1
+
+- Write-outcome recovery, target verification, T-junction/cleanup and BOM fixes; complete restored KiRouting proxy integration.
+
 ## 2026.11.20.4
 
 - Require a passing latest-readback whole-sheet report for every completed schematic sheet; update the checker and region-report validation.

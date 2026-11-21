@@ -9,7 +9,7 @@
 ## 工程
 
 - `project.getInfo` 读取当前工程及文档树，`project.getInfoOf` 查询指定工程，`project.list` 列出工程。结果异常时先核对查询范围与团队。
-- `project.create` 创建工程；`project.open` 打开指定工程并切换当前工程。打开前确认旧工程已保存，或用户允许丢弃未保存内容；合法目标也不保证保留旧工程未保存数据。
+- `project.create` 创建工程。`project.open` 打开指定工程。打开前确认旧工程的未保存内容已妥善处理。返回 `activationConfirmed: true` 后再在当前连接切页。若宿主已打开但当前连接未切换，重新查询连接和活动页。
 - `project.moveToFolder` 移动工程，空目录表示根目录；移动前后按工程 UUID 核对位置。
 - `project.exportFile` 导出原生工程。需工程下载权限，导出后检查文件内容。
 - `project.importFile` 导入 base64 文件并创建工程。支持的格式包括 `.PcbDoc`、`.SchDoc`、`.epro`、`.epro2`，可由扩展名推断 `fileType`；`newProjectName` 可指定显示名，调用前检查当前团队重名。在线 `.epro2` 省略名称时仅从根 `project2.json.title` 派生；不从文件名猜名、不追加后缀或覆盖同名工程。无法可靠取名或已重名时须显式提供名称。在线 `.epro2` 的根 `description` 会按原字符串写入新工程描述；此规则不适用于离线导入或其他格式。导入 API 为 Beta，不承诺所有格式无损，也不证明已布线 PCB/覆铜持久。

@@ -133,6 +133,7 @@
 ## 异常修复和宏
 
 - 先只读定位标签异常，再按情况用 `pruneFloatingLabels`、`fixNetLabels`、`repairNet` 或 `dedupeWireNets`。支持 `dryRun` 时先预览；`pruneFloatingLabels.dryRun` 省略时执行清理，`fixNetLabels.dryRun` 省略时只预览。修复后核对网表和 DRC。源码改写兜底不是普通修复前置，只有明确需要且已备份时使用。
+- `dedupeWireNets` 处理同一简单路径上位置、样式一致的重复标签。遇到 T 接、分支、与其他导线相接或需要选择保留位置时，先在 EDA 界面核对并处理。完成后核对导线、标签附着、网表及保存重开。
 - `macro` 仅组合已确定且中途无需判断的步骤；步骤结果键为 `steps`。遇到失败或未知写入时停止依赖步骤。需要根据读回决定下一步时，分开提交。
 
 完整器件替换不是单条 ACE 指令。替代型号、封装和引脚映射须先由 AI 与人工确认；模块复用插件的 RPC 不属于 ACE HTTP 指令。仅用 ACE 时，应先备份工程，核对新旧器件资源、逐引脚映射、网络和属性，再放置新件；全部确认后才删除旧件，并复查网表和非目标对象。PCB 更新由用户在 EDA 界面发起并确认。
@@ -145,4 +146,5 @@
 | --- | --- | --- |
 | 检查与保存 | `schematic.listWires`、`schematic.runDrc`、`schematic.getNetlist`、`schematic.save`、`schematic.exportPng` | 核对导线、规则、网络表，保存并查看图面。DRC 无错误不能单独证明连接正确。 |
 | 导出 | `schematic.exportBom`、`schematic.exportNetlist` | 导出 BOM 或网表。 |
+| 装配变体 BOM | `schematic.listAssemblyVariants`、`schematic.exportBom` | 先查变体名称或 ID，再指定导出。核对文件中的位号和数量。 |
 | 结构检查和删除 | `schematic.structuralAudit`, `schematic.runDrcDetailed`, `schematic.delete` | 检查结构和 DRC，必要时删除确认的对象。 |

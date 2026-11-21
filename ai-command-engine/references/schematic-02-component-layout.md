@@ -36,7 +36,7 @@ Verify the window, project, and page using [Connection and Environment](setup.md
 
 ## Place, inspect, and adjust
 
-- `schematic.placeDevice` places one component. Check required fields and coordinates in current help. `lcscId` and `libraryUuid` can constrain the library; omitting the library uses the SDK search scope. The returned `device` identifies the actual device and library. `placementVerified` confirms instance readback only; `footprintVerified`, `footprintStatus`, `pcbReady`, and `pcbReadyScope` describe the checked footprint and pin/pad mapping scope. A symbol without a footprint may still be placed with a warning. If creation or readback is abnormal, inspect the current project; do not replay the placement. Use `schematic.getPlacementResourcesDiagnostic` for read-only checks of existing instances.
+- `schematic.placeDevice` places one component. When placing by part number for PCB transfer, the plugin checks same-number matches for a footprint association if the first match lacks one. An explicit library limits the search. An explicit device UUID selects that exact device. Before transfer, inspect the selected device, library, `footprintVerified`, and `pcbReady`. A symbol without a footprint can be placed with a warning. If creation or readback is abnormal, inspect the current project before proceeding. Use `schematic.getPlacementResourcesDiagnostic` for read-only checks of existing instances.
 
 - `schematic.modifyComponent` submits a complete properties object. Read existing project properties first and preserve custom `otherProperty` keys; do not overwrite project instances with library defaults.
 

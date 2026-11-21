@@ -42,7 +42,7 @@
 
 ## 放置、读回与调整
 
-- `schematic.placeDevice` 放置单件，必需参数及坐标以窗口帮助为准。可用 `lcscId` 与 `libraryUuid` 限定库；省略库沿用 SDK 查询范围。返回的 `device` 标识实际器件和库；`placementVerified` 只表示实例读回，`footprintVerified`、`footprintStatus`、`pcbReady` 和 `pcbReadyScope` 分别说明封装及引脚/焊盘映射核对范围。无封装符号仍可能放置并带警告。创建后核验异常时先查现场，不重放。用 `schematic.getPlacementResourcesDiagnostic` 只读检查现有实例。
+- `schematic.placeDevice` 放置单件。按料号放置且需要转 PCB 时，如果首个结果无封装，插件会查同料号候选并优先选有封装关联的器件。指定库时查询限于该库。指定器件 UUID 时按该引用放置。核对返回的实际器件和库、`footprintVerified` 及 `pcbReady`。无封装符号放置后会提示限制。创建后核验异常时先查现场。现有实例可用 `schematic.getPlacementResourcesDiagnostic` 只读诊断。
 
 - `schematic.modifyComponent` 提交完整属性对象；先读出现有工程属性并保留 `otherProperty` 自定义键，不用库器件默认值覆盖工程实例。
 

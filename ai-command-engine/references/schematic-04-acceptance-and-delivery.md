@@ -111,6 +111,7 @@ When syncing to an already routed PCB, review existing traces, vias and actual c
 ## Repairs and macros
 
 - First inspect label problems read-only, then choose `pruneFloatingLabels`, `fixNetLabels`, `repairNet`, or `dedupeWireNets` as appropriate. Use `dryRun` where supported. `pruneFloatingLabels.dryRun` defaults to cleanup; `fixNetLabels.dryRun` defaults to preview. Check netlist and DRC afterward. Source rewrite is not a routine prerequisite; use it only when explicitly needed and backed up.
+- Use `dedupeWireNets` for duplicates with matching positions and styles on one simple path. Inspect and handle branches, contact with other wire trees, and label placement choices in EDA. Verify geometry, label attachment, the netlist, and persistence after reopening.
 - Use `macro` only to combine known steps that need no intermediate decisions. Step results are under `steps`. Stop dependent steps on failure or unknown writes. If the next action depends on readback, submit it separately.
 
 Replacing a complete component is not one ACE command. AI and a person must confirm the substitute, footprint, and pin mapping first. Module-reuse plugin RPC is not an ACE HTTP command. With ACE alone, back up the project, verify resources, pin mapping, nets, and properties; place the replacement, then delete the old component only after all checks pass. Recheck the netlist and non-target objects. The user initiates and confirms PCB update in EDA.
@@ -123,6 +124,7 @@ Official netlist references: [legacy string API](https://prodocs.lceda.cn/cn/api
 | --- | --- | --- |
 | Check and save | `schematic.listWires`, `schematic.runDrc`, `schematic.getNetlist`, `schematic.save`, `schematic.exportPng` | Inspect wires, rules, and netlist; save and view the page. A clean DRC alone does not prove correct connectivity. |
 | Export | `schematic.exportBom`, `schematic.exportNetlist` | Export a BOM or netlist. |
+| Assembly-variant BOM | `schematic.listAssemblyVariants`, `schematic.exportBom` | List variants and select the exact name or ID before export. Check the designators and quantities in the file. |
 | Structural checks and deletion | `schematic.structuralAudit`, `schematic.runDrcDetailed`, `schematic.delete` | Inspect structure and DRC; delete verified targets if needed. |
 
 ## Candidate Reviews and Substitutions
