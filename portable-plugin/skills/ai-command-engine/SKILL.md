@@ -1,0 +1,80 @@
+---
+name: ai-command-engine
+description: Query, draw, edit, and inspect schematics, PCBs, projects, and component libraries in JLCEDA Professional through the local HTTP command proxy. Use extension-dev-skill for plugin development and debugging.
+---
+
+# AI Command Engine
+
+Read and follow the [packaged collaboration rules](references/agent-workflow.md) when using this skill.
+
+Operate JLCEDA Professional through the local command proxy. Send structured commands; do not write ad hoc `eda.*` scripts.
+
+## Schematic Drawing Is Required
+
+Before the first schematic write, read the four stage guides in order. Then perform the steps that apply to the current scope.
+
+1. [Plan and Draw Functional Areas](references/schematic-01-functional-areas.md)
+2. [Place and Arrange Components](references/schematic-02-component-layout.md)
+3. [Wire and Check Each Area](references/schematic-03-wiring-and-area-checks.md)
+4. [Verify and Deliver the Schematic](references/schematic-04-acceptance-and-delivery.md)
+
+- Follow this order: draw functional-area boxes and titles → place components and read actual pins → wire one area at a time → run the checker to accept each completed area → run the checker again and review the completed sheet.
+- Save the area and required pin-connection plan before drawing.
+- After drawing each schematic sheet, run [check-schematic.mjs](scripts/check-schematic.mjs) on the full sheet and keep its report. Deliver the sheet only after the report passes.
+- Every new functional area must have an actual box and title. Edit existing drawings only within the authorized scope.
+- Directly connect nearby pins on the same net within an area, including GND. Do not replace these connections with one label per pin for convenience.
+- Use the unified [Schematic Completion Checks](references/schematic-04-acceptance-and-delivery.md#schematic-completion-checks). Report electrical connectivity and visual layout separately. For whole-schematic delivery, save, reopen, and read back. Do not report unchecked items as passing.
+
+## PCB Operations Are Required
+
+Before the first PCB write, read these guides in order, then follow the steps in the current scope.
+
+1. [Read the Board and Set Rules](references/pcb-01-read-board-and-rules.md)
+2. [Group and Place Components](references/pcb-02-group-and-place.md)
+3. [Route and Tune](references/pcb-03-route-and-tune.md)
+4. [Autoroute and Import Results](references/pcb-04-autoroute-and-import.md)
+5. [Add Copper and Silkscreen](references/pcb-05-copper-and-silkscreen.md)
+6. [Verify and Save](references/pcb-06-verify-and-save.md)
+
+- Follow this order: inspect current state and design conditions → mechanical setup, layers, and rules → place components by actual pads → check routability → route critical and ordinary nets → create actual copper pours and silkscreen → run DRC and applicable manufacturing checks → save for delivery.
+- Base placement on real pads, critical loops, and return paths. Default macro placement does not prove layout quality.
+- When choosing component coordinates or orientations, including individual moves, apply the [placement-stage manufacturing and assembly requirements](references/pcb-02-group-and-place.md#placement-stage-manufacturing-and-assembly-checks) to the proposed positions. Read back each batch and review it before production routing.
+- Run the [PCB stage check](references/pcb-06-verify-and-save.md#pcb-stage-check) twice for every functional area: after placement and before routing it, then after completing its routing. Keep both local DFM results by area and PCB revision. Also run the applicable checks after each routing batch, after repouring, and before releasing manufacturing files.
+- When conditions are met, offer optional grouping or autorouting per [Optional Tools and When to Offer Them](references/pcb-01-read-board-and-rules.md#pcb-optional-tools) and ask before using. Reuse an explicit prior choice without asking again.
+- Report methods, conclusions, evidence, and omissions for each item in [PCB Completion Checks](references/pcb-06-verify-and-save.md#pcb-completion-checks). Zero DRC errors, a copper outline, or a completed routing service does not replace board acceptance.
+- For local tasks, change only the authorized scope. Do not force a full-board manufacturing handoff or report unchecked items as passing.
+
+## Getting Started
+
+1. Follow [Connection and Environment](references/setup.md). If the proxy is stopped, start the bundled proxy in the background with `scripts/start-proxy.ps1` on Windows, then use its returned `baseUrl` to check the instance and current project. The default proxy range is `49720–49729`; the plugin discovers a compatible service automatically.
+2. Use the command index to choose a command. Query `__help` on the target window for parameters, defaults, return fields, and available examples. See [Connection and Environment](references/setup.md) for the request format.
+3. Before drawing or editing, read the relevant operation requirements and workflow. For read-only inspection, drawing guides are not required.
+
+## Execution Requirements
+
+- Specify `instanceId` in every request and verify the project and target document. Only one actor may write to a given document at a time.
+- `__docUuid` is an optional target-page check; it does not switch pages. Open the page first if it is not active.
+- After a write, verify the returned objects and properties. To confirm persistence, save, close and reopen, then read back.
+- A timeout does not mean the SDK cancelled the operation. If the result is unknown, stop dependent work, check the task and actual content, and do not resend blindly.
+- Do not treat `unknown`, `incomplete`, uncovered objects, or candidates in a read-only report as a passing check.
+- Evaluate DRC, geometry readback, and manufacturing parameters separately. A successful command does not prove the whole board or production is acceptable.
+- Check the installed version, interface capability, and known issues from the current connection and its help. Local source does not prove what is installed.
+
+## Find Guidance by Task
+
+| Task | Open directly |
+| --- | --- |
+| Power, ground, reference planes and actual copper | [Power and Ground Tie-In](references/pcb-power-ground-connectivity.md) |
+| Uncertain writes, split or merged routes and recovery | [Write Reconciliation](references/write-reconciliation-and-recovery.md) |
+| Connection, window selection, units, timeout recovery | [Connection and Environment](references/setup.md) |
+| Find command categories | [Command Categories](references/commands-frequency.md) |
+| Draw or edit a schematic | Follow the four stages above. Each stage includes its command index. |
+| Draw or edit a PCB | Follow the six stages above. Each stage includes a command index. |
+| Projects, boards, sheets, and backups | [Project and Sheet Commands](references/commands-project.md) |
+| Query or maintain symbols, footprints, and devices | [Library Commands](references/commands-lib.md) |
+| Extract, restore, or compose a reusable module | Follow [Reuse a Module](references/module-reuse.md) in order; query `__help` for command parameters. |
+| Rule knowledge, trace-width estimates, and parts queries | [Knowledge and Parts](references/commands-knowledge.md) |
+| Fabrication outputs, BOM, and coordinate files | [Manufacturing File Requirements](references/manufacturing-file-requirements.md) |
+| Properties, labels, netlists, and save issues | [Operational Risks](references/pitfalls.md) |
+| Prepare and submit plugin issues | [Issue Reporting](references/issue-reporting.md) |
+| Develop or review plugin commands | [Extension Development Requirements](references/extension-development-requirements.md); use extension-dev-skill for SDK information and debugging |

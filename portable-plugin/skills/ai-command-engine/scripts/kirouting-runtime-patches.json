@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "revision": "2026.11.19.1",
+  "upstream": {
+    "name": "KiCadRoutingTools",
+    "version": "0.18.0",
+    "license": "MIT"
+  },
+  "patches": [
+    {
+      "file": "length_matching.py",
+      "sourceSha256": "99f57bf180deb0f0b6aab0e8305e34a6a6e8bea9acc029b643aea07ceab479f7",
+      "patchedSha256": "577763305409cb343f2b7a8417dd3aa4c74e77f4514aacb0c021635902835798",
+      "old": "            if trial_bumps > 0 and trial_metric >= best_metric:\n                new_segments = trial_segments",
+      "new": "            if trial_bumps > 0 and abs(trial_metric - target_metric) < abs(best_metric - target_metric):\n                new_segments = trial_segments",
+      "reason": "Choose the single-ended amplitude candidate by smaller absolute error to the unchanged target, including corrections to overshoot; preserve all geometry and clearance checks."
+    },
+    {
+      "file": "single_ended_routing.py",
+      "sourceSha256": "f363db6a43c0585421c25b669a127e3d750a8b7ab89244471506d30324131102",
+      "patchedSha256": "7d35c1ca9189ffaf71354e8542c6c39d3fea6dabb032210fc2e01df0ad7d06ce",
+      "replacements": [
+        {
+          "old": "        pair = (round(f['via_diameter'], 3), round(f['via_drill'], 3))\n        if pair[0] < rec[0] - 1e-9 and pair not in cands:\n            cands.append(pair)",
+          "new": "        pair = (f['via_diameter'], f['via_drill'])\n        # Compare candidates without quantizing their physical dimensions.\n        duplicate = any(\n            abs(pair[0] - size) <= 1e-9\n            and abs(pair[1] - drill) <= 1e-9\n            for size, drill in cands\n        )\n        if pair[0] < rec[0] - 1e-9 and not duplicate:\n            cands.append(pair)"
+        },
+        {
+          "old": "        vd, dr = round(vd, 3), round(dr, 3)\n        if dr < vd <= config.via_size + 1e-9 and vd not in seen_dia:\n            seen_dia.add(vd)",
+          "new": "        # Keep the first diameter candidate and retain its exact size/drill.\n        duplicate = any(abs(vd - seen) <= 1e-9 for seen in seen_dia)\n        if dr < vd <= config.via_size + 1e-9 and not duplicate:\n            seen_dia.add(vd)"
+        }
+      ],
+      "reason": "Preserve original physical via size and drill while limiting 1e-9 mm comparison to candidate deduplication; do not change spacing or output tolerance."
+    },
+    {
+      "file": "diff_pair_routing.py",
+      "sourceSha256": "7fa4a9e674484fd3e6eaf5ca446f9fe3bfeaa953ee10425e7d2b4fee9b5f1e88",
+      "patchedSha256": "3030e108922046536b5ef43fa78c7f66aa52353469ed7303944a785e68ca2bb0",
+      "replacements": [
+        {
+          "old": "\n    src_candidates, _, src_rotated, src_layer = _find_open_positions_multilayer(",
+          "new": "\n    src_candidates, src_used_setback, src_rotated, src_layer = _find_open_positions_multilayer("
+        },
+        {
+          "old": "\n        src_candidates, _, src_rotated, src_layer = _find_open_positions_multilayer(",
+          "new": "\n        src_candidates, src_used_setback, src_rotated, src_layer = _find_open_positions_multilayer("
+        },
+        {
+          "old": "\n    tgt_candidates, _, tgt_rotated, tgt_layer = _find_open_positions_multilayer(",
+          "new": "\n    tgt_candidates, tgt_used_setback, tgt_rotated, tgt_layer = _find_open_positions_multilayer("
+        },
+        {
+          "old": "\n        tgt_candidates, _, tgt_rotated, tgt_layer = _find_open_positions_multilayer(",
+          "new": "\n        tgt_candidates, tgt_used_setback, tgt_rotated, tgt_layer = _find_open_positions_multilayer("
+        },
+        {
+          "old": "\n    def make_route_data(pose_path, src_actual_dir, tgt_actual_dir, src_angle, tgt_angle, gnd_via_dirs=None):\n        rd = _build_route_data(pose_path, src_actual_dir, tgt_actual_dir, src_angle, tgt_angle, gnd_via_dirs)\n",
+          "new": "\n    def make_route_data(pose_path, src_actual_dir, tgt_actual_dir, src_angle, tgt_angle,\n                        src_candidate, tgt_candidate, gnd_via_dirs=None):\n        rd = _build_route_data(pose_path, src_actual_dir, tgt_actual_dir, src_angle, tgt_angle, gnd_via_dirs)\n        # Candidate directions and the actual ladder setback define the\n        # continuous coordinates checked by endpoint search; grid coordinates\n        # are only the router's discrete entry cells.\n        rd['selected_src_entry'] = (\n            center_src_x + src_candidate[2] * src_used_setback,\n            center_src_y + src_candidate[3] * src_used_setback)\n        rd['selected_tgt_entry'] = (\n            center_tgt_x + tgt_candidate[2] * tgt_used_setback,\n            center_tgt_y + tgt_candidate[3] * tgt_used_setback)\n"
+        },
+        {
+          "old": "\n                path, iters, blocked, src_dir, tgt_dir, s_ang, t_ang, gnd_dirs = try_route(src_cand, tgt_combos[0], is_probe_attempt=True)\n                total_iterations += iters\n                best_first_iters = max(best_first_iters, iters)\n\n                if path is not None:\n                    return make_route_data(path, src_dir, tgt_dir, s_ang, t_ang, gnd_dirs), iters, [], None\n",
+          "new": "\n                path, iters, blocked, src_dir, tgt_dir, s_ang, t_ang, gnd_dirs = try_route(src_cand, tgt_combos[0], is_probe_attempt=True)\n                total_iterations += iters\n                best_first_iters = max(best_first_iters, iters)\n\n                if path is not None:\n                    return make_route_data(path, src_dir, tgt_dir, s_ang, t_ang, src_cand, tgt_combos[0], gnd_dirs), iters, [], None\n"
+        },
+        {
+          "old": "\n            path, iters, blocked, src_dir, tgt_dir, s_ang, t_ang, gnd_dirs = try_route(src_combos[0], tgt_combos[0], is_probe_attempt=True)\n            total_iterations += iters\n            best_first_iters = iters\n\n            if path is not None:\n                return make_route_data(path, src_dir, tgt_dir, s_ang, t_ang, gnd_dirs), iters, [], None\n",
+          "new": "\n            path, iters, blocked, src_dir, tgt_dir, s_ang, t_ang, gnd_dirs = try_route(src_combos[0], tgt_combos[0], is_probe_attempt=True)\n            total_iterations += iters\n            best_first_iters = iters\n\n            if path is not None:\n                return make_route_data(path, src_dir, tgt_dir, s_ang, t_ang, src_combos[0], tgt_combos[0], gnd_dirs), iters, [], None\n"
+        },
+        {
+          "old": "\n                path, iters, blocked, src_dir, tgt_dir, s_ang, t_ang, gnd_dirs = try_route(selected_src, tgt_cand, is_probe_attempt=True)\n                total_iterations += iters\n                best_second_iters = max(best_second_iters, iters)\n\n                if path is not None:\n                    return make_route_data(path, src_dir, tgt_dir, s_ang, t_ang, gnd_dirs), best_first_iters + iters, [], None\n",
+          "new": "\n                path, iters, blocked, src_dir, tgt_dir, s_ang, t_ang, gnd_dirs = try_route(selected_src, tgt_cand, is_probe_attempt=True)\n                total_iterations += iters\n                best_second_iters = max(best_second_iters, iters)\n\n                if path is not None:\n                    return make_route_data(path, src_dir, tgt_dir, s_ang, t_ang, selected_src, tgt_cand, gnd_dirs), best_first_iters + iters, [], None\n"
+        },
+        {
+          "old": "\n                path, iters, blocked, src_dir, tgt_dir, s_ang, t_ang, gnd_dirs = try_route(selected_src, tgt_combos[0], is_probe_attempt=True)\n                total_iterations += iters\n                best_second_iters = iters\n\n                if path is not None:\n                    return make_route_data(path, src_dir, tgt_dir, s_ang, t_ang, gnd_dirs), best_first_iters + iters, [], None\n",
+          "new": "\n                path, iters, blocked, src_dir, tgt_dir, s_ang, t_ang, gnd_dirs = try_route(selected_src, tgt_combos[0], is_probe_attempt=True)\n                total_iterations += iters\n                best_second_iters = iters\n\n                if path is not None:\n                    return make_route_data(path, src_dir, tgt_dir, s_ang, t_ang, selected_src, tgt_combos[0], gnd_dirs), best_first_iters + iters, [], None\n"
+        },
+        {
+          "old": "\n    if path is not None:\n        return make_route_data(path, src_dir, tgt_dir, s_ang, t_ang, gnd_dirs), total_iterations, [], None\n    return None, total_iterations, blocked, None\n",
+          "new": "\n    if path is not None:\n        return make_route_data(path, src_dir, tgt_dir, s_ang, t_ang, selected_src, selected_tgt, gnd_dirs), total_iterations, [], None\n    return None, total_iterations, blocked, None\n"
+        },
+        {
+          "old": "\n    # Un-snap the centerline's terminal endpoints to the exact setback\n    # positions: grid snapping can bias an endpoint up to half a grid cell\n    # toward one pad of the pair, skewing the connector fan enough to graze\n    # the near pad's corner (sub-0.01mm clearance violations)\n    centerline_float = [(coord.to_float(gx, gy)[0], coord.to_float(gx, gy)[1], layer)\n                        for gx, gy, layer in simplified_path]\n    if config.diff_pair_centerline_setback is not None:\n        setback_dist = config.diff_pair_centerline_setback\n    else:\n        setback_dist = spacing_mm * 4\n    for idx, (cx, cy, adx, ady) in (\n            (0, (center_src_x, center_src_y, src_actual_dir_x, src_actual_dir_y)),\n            (-1, (center_tgt_x, center_tgt_y, tgt_actual_dir_x, tgt_actual_dir_y))):\n        exact = (cx + adx * setback_dist, cy + ady * setback_dist)\n        fx, fy, flayer = centerline_float[idx]\n        if math.hypot(fx - exact[0], fy - exact[1]) <= config.grid_step * 0.75:\n            centerline_float[idx] = (exact[0], exact[1], flayer)\n",
+          "new": "\n    # Reconstruct the route from the continuous coordinates selected and\n    # clearance-checked by endpoint search. Do not substitute the default\n    # setback or a snapped grid cell here: either can skew the short P/N\n    # lead-ins while leaving the routed centerline apparently successful.\n    centerline_float = [(coord.to_float(gx, gy)[0], coord.to_float(gx, gy)[1], layer)\n                        for gx, gy, layer in simplified_path]\n    source_layer = centerline_float[0][2]\n    target_layer = centerline_float[-1][2]\n    centerline_float[0] = (*route_data['selected_src_entry'], source_layer)\n    centerline_float[-1] = (*route_data['selected_tgt_entry'], target_layer)\n"
+        }
+      ],
+      "reason": "Retain the continuous endpoint coordinates selected by endpoint search using its actual ladder setback. Reconstruct differential lead-ins from those checked coordinates rather than a default setback or grid-snapped point; preserve requested gap, grid, and final validation."
+    }
+  ]
+}

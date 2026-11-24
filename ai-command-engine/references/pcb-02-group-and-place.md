@@ -107,6 +107,23 @@ The menu entries are **Mark Functional Regions (No Component Movement)…** and 
 
 If the PCB changes or a preview becomes stale, check the active board and preview again. When an operation's outcome is unknown, inspect the actual state before continuing.
 
+### Placement-stage manufacturing and assembly checks
+
+1. Before placing parts, confirm the board fabrication and assembly process and obtain body dimensions and orientation for the fitted parts. Identify machine-placed, hand-installed, and omitted parts. Allow body and tool access clearance for hand-installed parts as well.
+2. Reserve same-side body clearance, distance from the actual board edge and routed slots, and assembly access. Check one repeated unit before replicating it.
+3. Run the read-only placement script before each batch of direct placements, moves, or rotations. Read back actual positions and orientations, then rerun without candidate overrides. If native placement only previews counts, perform the same checks after it runs.
+4. After placing fine-pitch parts and before production routing, export a temporary Gerber from the current PCB. Use `dfm.inspectManufacturingFiles` to measure the narrowest gap between actual mask openings on the populated side. Check nearby openings for unintended merges. Locate findings by designator and nearby pads. Apply the confirmed solder-mask web requirement for this process and re-export after adjustments. Record missing artwork, process limits, or pad associations as pending checks.
+5. Resolve confirmed placement conflicts before production routing. When dimensions or process data are missing, record the affected designators, checks, and missing inputs. Keep those areas in draft as needed. Recheck the mask and drill-to-paste geometry on the final manufacturing files after routing, copper pours, and panelization. Report design paste and the production stencil separately.
+
+#### Placement DFM script
+
+Run `node scripts/check-pcb-placement.mjs placement.json` from the skill folder. Use one PCB revision and coordinate origin, with all distances in millimeters.
+
+- Set `revision` and `unit: "mm"`. Provide `board.outline` as `[[x,y],…]` and `board.cutouts` as an array of routed-slot rings. Use an empty array when no slots exist.
+- Include existing parts and proposed new parts in `components`. Each entry needs `ref`, `partNumber`, `assembly` (`smt`, `manual`, or `omit`), `side` (`top` or `bottom`), `xMm`, `yMm`, and `rotationDeg`. A `body` model supplies the matching `partNumber`, `widthMm`, `heightMm`, and `source`, plus optional `offsetXMm`, `offsetYMm`, and `rotationOffsetDeg`. Verify top and bottom orientation conventions against the input coordinates.
+- Optionally pass `moves` with `ref`, `xMm`, `yMm`, `rotationDeg`, and optional `side`. The script checks those candidate moves and their neighboring parts. Omit the array to check the entire snapshot.
+- Supply process limits in `rules.bodyGapMm`, `rules.edgeGapMm`, and `rules.source`. Use `rules.slotGapMm` when routed slots have a separate limit. Review the reported failures and missing inputs. Check nonrectangular bodies and assembly tool access separately.
+
 ## Command index
 
 | Task | Commands | Purpose |

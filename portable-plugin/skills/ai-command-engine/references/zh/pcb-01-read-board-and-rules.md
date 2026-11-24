@@ -1,0 +1,198 @@
+# PCB 1 · 读板与设计规则
+
+具体参数、默认值、回包和示例以目标窗口的 `__help` 为准。
+
+## 必须执行的操作顺序
+
+先明确是布局、局部修改、整板布线还是制造交付。只执行本轮及受影响内容，已有合格部分复用；未提供的工艺、机械或电气参数不猜测，只继续不依赖缺项的工作。
+
+1. 读取当前工程、PCB、原理图关联、器件、真实焊盘及网络；原理图更新到PCB仍由用户在EDA界面发起，更新后重新读回，并按下节分别询问是否需要标记功能区或移动器件分组。
+2. 核对板框、孔槽、固定接口和禁放区域，再核对图层、适用的物理叠层及实际网络/分层/区域规则。修改前明确允许移动、改线和必须保持的对象。
+3. 按后文摆放顺序安排固定接口、关键局部电路、主控和普通器件；位置按真实连接、焊盘及返回路径确定，不按位号或芯片中心机械排队。分组整理只在选用后执行。
+4. 正式布线前检查真实焊盘出口、共用通道、过孔及全部受影响层的空间；对受限区域按需要成组试布或核对实际几何。发现冲突先调整相关器件或路径，不能用自动布线成功掩盖布局问题。
+5. 先完成关键回路和受限线路，再处理普通线路及全部必连电源、地焊盘；选用的扇出、差分、等长和自动布线工具按对应流程，读回后核对实际路径和连接。
+6. 需要扇出和改线的部分完成后重建覆铜，核对实际填充、孤岛及返回连续性，再整理丝印与接口标识。后续再改铜形或相关网络时，重查受影响覆铜和连接。
+7. 核对网络、关键回路、机械装配和图面，整板最终版本运行完整DRC；制造交付再按实际工艺执行适用的DFM/SMT检查和文件核对。
+8. 按本文件完成检查、保存及重开要求交付，逐项报告范围、依据和缺项；只完成布局或局部操作时，不能称整板已布通或可生产。
+
+局部布局与布线可迭代调整；进入依赖步骤前先解决影响它的必要条件，不重新推进无关阶段，也不要求用户逐步确认。
+
+## 可选功能与提示时机
+
+器件分组、自动布线及下列自动整理/优化功能均为可选方式，不是每块板必做的步骤。条件具备且本轮尚未选择时，AI主动说明用途和影响并询问；相关选项可合并询问，已有明确选择直接沿用，不重复确认。
+
+| 可选功能 | 何时提示 | 选择后怎么做 |
+| --- | --- | --- |
+| 原理图功能区标记和高亮 | 目标 PCB 及其原理图关联已核实后，询问是否标记或定位功能区。 | 用 `pcb.getSchematicRegions` 读取成员和未匹配对象，包含锁定成员。用默认 `dryRun:true` 预览 `pcb.markSchematicRegions`；只有用户明确选择后才用 `dryRun:false` 执行，再读回、保存、关闭、重开并核对。`pcb.locateSchematicRegion` 只定位/高亮，不写入设计数据。 |
+| 移动器件分组 | 仅在用户明确要求移动器件并已查看影响时使用。 | `pcb.groupBySchematicRegions` 会移动器件并创建分组，与功能区标记和高亮分开；不要默认调用。 |
+| 自动布线 | 本轮包含布线且布局、规则、受限通道已检查时，可提出采用自动布线。 | 默认选原生并明确目标网络。选 FreeRouting 或 KiRouting 时，再检查各自的输入格式、运行环境和选网条件，按[自动布线流程](pcb-04-autoroute-and-import.md)执行。 |
+| 密脚扇出 | 密脚焊盘或换层出口需要扇出，真实焊盘、网络、线宽、孔和障碍条件已明确时。 | 先出计划，核对可执行范围，再执行和检查；不选宏仍须满足必要的引出及连接要求。 |
+| 差分布线/补长工具 | 已确认差分或时序要求，网络、参考面、目标及容差明确，且需要相应几何工具时。 | 按当前支持范围规划与执行，不为普通控制线无故补长；不选工具不等于免除已确认的差分或时序要求。 |
+| 自动铜皮/焊盘外扩 | 已明确局部载流或连接需求，目标焊盘、网络、层及所需尺寸可核对时。 | 说明会增加或改变哪些铜形，选用后先计划、再执行及读回；不对无关焊盘自动扩形。 |
+| 网络文字丝印 | 网络已核实，需要额外网络标识，且有可检查的丝印空间时。 | 说明标识范围和影响，选用后预览、生成，再核对开窗、板边和可读性。 |
+
+- 未回复时不执行可选功能，可继续不依赖该选择的读取和检查；条件缺失时说明缺项，不把提议当作已获准执行。
+- 用户选择不需要时沿用常规流程，不为通过验收补做该功能；条件或范围实际改变后才说明新原因再提议。
+- 常规读回、已授权的必要走线/覆铜重建及验收按流程执行，不作为每步都要询问的菜单。
+- 已确认的电气、机械和制造要求仍须满足；可选的是工具或整理方式，不是是否遵守设计要求。
+
+## 板框和制造规则
+
+- 先确认板框、孔槽、固定接口、装配面和高度。
+- 接口位置和朝向按机械图、配套插头和装配方式确定。
+- 检查插头插到底时是否被板边、外壳或相邻器件挡住。
+- 为线缆弯曲、锁扣和拔插工具留空间。
+- 板对板连接器核对配对板的位置、方向和高度。
+- 安装孔周围按实际螺钉、垫圈和支柱留空间。
+- 分板边缘、工艺边和贴装空间按实际生产方式检查。
+- 只锁定已有明确位置要求的器件。
+- 按实际工艺设置线宽、间距、铜到板边和孔规则。
+- 分清钻孔尺寸与成品孔尺寸。
+- 分清镀铜孔、非镀铜孔及塞孔、填孔要求。
+- 检查网络、分层和区域规则实际作用于哪些对象。
+- 不只检查默认规则。
+- 有绝缘、爬电或阻抗要求时，单独核对依据。
+
+## 层叠和电流返回
+
+- 写清每层用途、材料、铜厚和介质厚度。
+- 分别记录图纸铜厚、检查采用的铜厚和订单铜厚。
+- 三者不一致时，写清差异和处理状态。
+- 未确定的订单工艺标为待确认。
+- 已确定但未提交的工艺标为拟下单参数。
+- 修改检查参数不代表修改了图纸层叠。
+- 铜层数量正确不代表物理层叠正确。
+- 结合布线密度、供电和板厂工艺选择层叠。
+- 信号变化次数少，不代表每次高低电平切换都很慢。
+- 关键线路要明确所用层、参考铜面和返回路径。
+- 检查参考面是否被孔、槽和走线切断。
+- 层名叫 GND 不代表实际铜面连续。
+- 返回电流会分布在铜面上，不只沿示意图的一条线流动。
+
+四层板可比较以下方案，没有通用首选。
+S 表示信号，G 表示地，P 表示电源。
+
+| 从顶到底 | 主要检查点 |
+|---|---|
+| S / G / P / S | 底层线路的电源参考面是否连续；换参考面时如何返回 |
+| S+P / G / G / S+P | 外层供电是否够用；两层地之间如何连接 |
+| S / G / P+少量S / G | 内层信号实际参考哪一层；走线是否切碎电源区 |
+
+- 相同层序也要检查具体介质厚度和阻抗。
+- 两层板检查实际铜面能否提供返回路径。
+- 六层板不能仅凭层数判定更好。
+- 没有真实制造层叠时，不称阻抗已通过。
+- 快速或敏感信号避免跨参考面缝隙。
+- 信号换层时，检查返回电流如何换层。
+- 同地参考面之间按实际需要安排地过孔。
+- 地过孔不能连接不同电位的参考面。
+- 地参考转电源参考时，检查交流返回条件或调整布线层。
+- 不给所有换层信号盲加电容。
+- 差分线也会有两根线同向变化的电流，其返回路径仍要检查。
+- 不只因 AGND/DGND 名称不同就切割地面。
+- 不为补回流破坏隔离槽、天线净空或特殊感测结构。
+
+## 差分信号
+
+- 用 `knowledge.query` 的 `query: "USB"` 查询接口相关经验，再按具体标准、器件资料、板厂叠层和项目约束确定阻抗、间距、等长及参考面。
+- 知识库数值仅供初步规划；不得把单一接口的经验数值当作所有差分对的固定规则。
+- 完成后核对差分对规则、两根线的全程间距、长度差、参考面连续性和换层位置。
+
+### 阻抗设计参数与订单一致
+
+先选定板厂可制造叠层再计算，或先按已有订单的实际参数计算。两种方式都使用同一份选定参数，设计和下单逐项核对。
+
+- 记录板厂、叠层名称或代码、来源与查询日期、层数、成品板厚、材料、内外层铜厚。
+- 按所用官方计算器记录阻抗模型、目标值、信号层、参考层、差分线隙或共面线到地铜间距，以及计算得到的线宽。模型采用的介质厚度、Dk、阻焊等参数从实际来源记录，不填猜测默认值。
+- 分清拟选参数、已用于计算的参数和订单已确认参数。下单核对结构、材料、厚度、铜厚、阻抗测试与公差；不一致时重新核算，不能只核对层数。
+- EDA中记录的物理叠层不代表订单已选择相同结构，阻抗估算也不等于制造保证。
+
+依据：[嘉立创阻抗计算器指南](https://jlcpcb.com/help/article/user-guide-to-the-jlcpcb-impedance-calculator)、[标准层压结构](https://jlcpcb.com/help/article/multi-layer-pcb-standard-laminated-structures)、[EDA物理叠层与下单说明](https://prodocs.lceda.cn/en/pcb/tools-layer-manager/)。
+
+## 复制多层板后的检查
+
+- 复制四层板或其他多层板后，核对目标板的原理图关联。
+- 核对实际铜层顺序、介质层和总板厚。
+- 核对各层用途和铜厚是否符合本次设计条件。
+- 要求保留原板时，确认原板仍在且内容未变。
+
+## 空网络焊盘
+
+- 空网络焊盘逐个核对脚号、用途和已确认的接法。
+- 分清漏接、未使用信号脚、允许悬空的功能脚和机械焊盘。
+- 允许悬空的功能脚必须有对应型号的资料依据。
+- 机械焊盘按实际用途核对是否需要接地或其他连接。
+- 工具无法确定网络不代表设计一定有错。
+- 分类确认不代表工具已经完整检查该焊盘。
+- 记录每个告警的分类、判断依据和未完成检查。
+- 不为消除告警强行补接地或修改网络。
+
+## 接收设计与读取现状
+
+原理图更新到PCB由用户在EDA界面发起并确认。AI不调用 `pcb.importChanges` 或官方导入接口。更新前后读取器件、封装关联、焊盘网络及非目标对象，避免把同步请求当成已经完成。
+
+导入/更新完成并读回后，按[可选功能与提示时机](pcb-01-read-board-and-rules.md#可选功能与提示时机)询问是否需要器件分组；已有明确选择直接沿用。未选择不调用分组或移动器件进行分组。
+
+用 `pcb.listComponents`、`pcb.getComponentPads`、`pcb.listNets`、`pcb.listLayers` 读取现状。对象ID来自当前PCB，不从旧截图或其他工程套用。焊盘数组从1开始的索引与运行时ID分别核对。
+
+调用 `pcb.placePad`、`pcb.placeHole` 时，仅使用当前 `__help` 列出的目标元数据；命令注册表会对照当前焦点文档和工程验证，目标不符时在写入前拒绝，也不会切换页面。`pcb.placePad` 支持在顶层或底层放置独立圆形、长圆和矩形焊盘；不支持真椭圆，因为保存重开会将其变为圆形。可选 `padType` 默认为 `normal`，`test` 表示单个测试点；它不会自动选择网络、批量排布或避让测试点，需核对测试点制造导出。
+
+`pcb.placeVia` 的 `viaType` 可选 `0` 普通过孔或 `2` 单个缝合孔；`pcb.listVias` 可读类型，`pcb.modifyVia` 可修改类型。这些指令不提供自动批量布孔或避让。
+
+## 板框与图层
+
+- `pcb.drawOutline` 使用左下角坐标和mil尺寸。重复建立板框前，先核对已有图元类型与ID。
+- `pcb.getCanvasOrigin` 读取画布原点相对数据原点的偏移，单位 mil；`pcb.setCanvasOrigin` 设置偏移，不移动设计图元。采用画布原点的制造导出坐标可能随之变化；修改后要核对制造坐标。
+- `pcb.setCopperLayers` 设置铜层数，不代表物理层叠已配置；层叠应用后重新读取。默认层叠不等于当前PCB已应用。
+- 图层名称与层号以当前命令帮助为准。未知名称不猜测，内层先确认当前板中可用。
+
+## 网络规则、差分走线与补长
+
+### 设计规则和规则方案
+
+修改规则前先调用 `pcb.getDesignRules`。公开 getter 返回的分析子项为空时，将相应配置标为未覆盖；不要猜字段或数值。DRC 检查仍可使用。
+
+用默认 `dryRun:true` 的 `pcb.updateDesignRules` 预览；检查预览后才用 `dryRun:false` 执行。只修改 `configuration.config` 内明确指定的字段；外层 `name` 是宿主元数据，不可写入。网络/网络类绑定只更新现有条目并保留身份。网络类分配会同步现有成员，预览列出受影响项；同批明确指定的单网络值优先。写后读回；保存、关闭并重开 PCB 以确认持久性。结果不明时停止依赖操作，先检查当前规则。
+
+新增 TRACK 规则须提交完整的 `config.Physics.Track.<name>` 对象；可在同一更新请求中合并受支持的既有字段修改，具体路径和单位查 `__help`。`pcb.deleteTrackRule` 只删除当前 PCB 中源码匹配、无引用的非默认 TRACK 定义。它与删除应用级模板的 `pcb.deleteRuleConfiguration` 不同；先检查默认预览，再保存重开确认持久性。
+
+仅当逐字段源码证实数值表示差异时才报告 normalization，例如 SAFE 未选中的间距网格单元或已映射的 SOLDER/PASTE 扩展。这不是通用容差，也不表示全部规则都已映射或验证。
+
+规则方案命令管理应用级模板库。`list`、`get` 读取模板；`save` 将已有完整配置复制为模板，省略来源时复制当前 PCB 的完整配置；`rename`、`delete` 管理自定义模板。这些命令不调用默认方案设置接口；保存模板不等于应用到当前 PCB。需要确认板上或默认方案状态时单独读取，不从模板写入成功推断 SDK 的其他状态。写操作默认先以 `dryRun:true` 预览，核对后才执行；具体参数和字段查 `__help`。
+
+当前 PCB 配置另存和自定义模板复制已有验证；系统模板原始格式的复制仍未解决，不要先应用到 PCB 来暗中转换。默认模板名称无法读取时，即使模板内容验证成功，也须将默认状态列为未验证。
+
+等长容差的命名绑定也可能在保存时变成 `default`；当前数值保持，不证明以后仍固定绑定该名称。
+
+`Track:"default"` 表示跟随默认方案。宿主保存时可能把指向当前默认方案名称的绑定转成 `default`。不能保证以后切换默认方案时仍固定绑定原名称。`verified` 只确认即时读回，持久性须保存重开核对。
+
+| 命令 | 用途 |
+| --- | --- |
+| `pcb.getDesignRules`、`pcb.updateDesignRules`、`pcb.deleteTrackRule`、`pcb.listRuleConfigurations`、`pcb.getRuleConfiguration`、`pcb.saveRuleConfiguration`、`pcb.renameRuleConfiguration`、`pcb.deleteRuleConfiguration` | 读取、更新设计规则、删除符合条件的当前板 TRACK 定义，或管理应用级模板；写操作先预览。模板不会应用到当前 PCB。 |
+| `pcb.createNetClass`、`pcb.renameNetClass`、`pcb.deleteNetClass` | 建立、改名或删除网络类。 |
+| `pcb.listNetClasses` | 查看网络类。 |
+| `pcb.addNetToClass` | 将网络加入网络类；删除成员按当前帮助确认对应命令。 |
+| `pcb.createDiffPair`、`pcb.listDiffPairs` | 建立或查看差分对；删除命令按当前帮助确认。 |
+| `pcb.getNetRules` | 只读查看网络规则，例如线宽和间距。 |
+| `pcb.getNetLength`、`pcb.getNetInfo`、`pcb.getNetPrimitives` | 查看网络长度、详情和网络图元。 |
+| `pcb.highlightNet` | 高亮或取消高亮网络，辅助定位。 |
+
+网络类增删、改名和差分对配置均为写入。写入结果不明时停止后续相关写入，并先读回当前状态。规则读取可能保留 unknown；不能自行推断空选择器的继承关系。明确的网络自身规则只有在来源、SDK 所属类和规则值一致且结构属于已支持范围时才可确认。已读取规则只说明配置值，不证明宿主 DRC 实际判定或制造合格。
+
+## 网络查询与交叉定位
+
+`pcb.select`、`pcb.clearSelection`、`pcb.getSelection` 用于管理当前选择；`pcb.crossProbe` 在原理图和 PCB 间定位位号、引脚或网络；`pcb.getComponentPads` 查询器件焊盘。调用前确认实例和对象 ID。交叉定位、高亮和选中只辅助查看，不表示对象连接或保存状态。网络拓扑核对可组合 `pcb.getNetInfo`、`pcb.getNetPrimitives`、`pcb.getNetLength` 和 `pcb.exportNetlist`；多个读数一致仍不能替代适用的 DRC 和实际连通检查。
+
+## 命令索引
+
+| 任务 | 命令 | 用途 |
+| --- | --- | --- |
+| 查看现状 | `pcb.listComponents`、`pcb.getComponentPads`、`pcb.listNets`、`pcb.listLayers` | 查看器件、焊盘、网络和图层。 |
+| 设计规则和规则方案 | `pcb.getDesignRules`、`pcb.updateDesignRules`、`pcb.deleteTrackRule`、`pcb.listRuleConfigurations`、`pcb.getRuleConfiguration`、`pcb.saveRuleConfiguration`、`pcb.renameRuleConfiguration`、`pcb.deleteRuleConfiguration` | 读取或更新指定字段、删除符合条件的当前板 TRACK 定义，或管理应用级模板；写操作先预览，模板不会应用到当前 PCB。 |
+| 网络类、差分与等长组 | `pcb.createDiffPair`、`pcb.listDiffPairs`、`pcb.deleteDiffPair`、`pcb.createNetClass`、`pcb.listNetClasses`、`pcb.addNetToClass`、`pcb.removeNetFromClass`、`pcb.deleteNetClass`、`pcb.renameNetClass`、`pcb.createEqualLengthGroup`、`pcb.listEqualLengthGroups`、`pcb.renameEqualLengthGroup`、`pcb.deleteEqualLengthGroup`、`pcb.addNetToEqualLengthGroup`、`pcb.removeNetFromEqualLengthGroup` | 管理网络分组、差分对和等长组。删除网络类不承诺恢复此前的网络颜色；修改前确认目标。 |
+| 焊盘对组 | `pcb.listPadPairGroups`、`pcb.createPadPairGroup`、`pcb.renamePadPairGroup`、`pcb.deletePadPairGroup`、`pcb.addPadsToPadPairGroup`、`pcb.removePadsFromPadPairGroup`、`pcb.getPadPairGroupMinWireLengths` | 先核对焊盘引用并读取现有组，再创建或修改目标组并读回。焊盘对组不会布线或验证焊盘的电气连接；主机报告的最短导线长度单位未知，不能作为布线验收。参数查 `__help`。 |
+| 图层和层叠 | `pcb.getCurrentLayer`、`pcb.selectLayer`、`pcb.setCopperLayers`、`pcb.setLayerVisible`、`pcb.setLayerLocked`、`pcb.listStackingConfigs`、`pcb.getStackingConfig`、`pcb.applyStackingConfig`、`pcb.saveStackingConfig`、`pcb.renameStackingConfig`、`pcb.deleteStackingConfig`、`pcb.setDefaultStackingConfig`、`pcb.addCustomLayer`、`pcb.removeCustomLayer`、`pcb.modifyLayer`、`pcb.setPcbType` | 查询或设置当前层、铜层数、图层和层叠。EDA 4.1.78 已确认 `pcb.getCurrentLayer`、全部层叠配置命令及实时 DRC 命令会拒绝执行，提示需要 EDA 4.2；不要将拒绝视为功能通过。 |
+| 选择与定位 | `pcb.getSelection`、`pcb.select`、`pcb.clearSelection`、`pcb.crossProbe`、`pcb.getPrimitivesInRegion`、`pcb.getPrimitiveAtPoint` | 查询选择、交叉定位或按区域和坐标查找图元。 |
+| 板框与同步 | `pcb.drawOutline`, `pcb.importChanges` | 建立板框。原理图同步由用户在 EDA 确认。 |
+| 过孔与测试焊盘 | `pcb.placeVia`、`pcb.listVias`、`pcb.modifyVia`、`pcb.placePad` | 需要时放置单个缝合孔或标记单个独立测试点。`pcb.placePad` 支持长圆焊盘，不支持真椭圆。不会自动批量选网、排布或避让。核对源码属性和测试点制造导出。 |
+| 画布原点 | `pcb.getCanvasOrigin`、`pcb.setCanvasOrigin` | 读取或设置画布偏移，不移动图元；修改后复核采用画布原点的制造坐标。 |

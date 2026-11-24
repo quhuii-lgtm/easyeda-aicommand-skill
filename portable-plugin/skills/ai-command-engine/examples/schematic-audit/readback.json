@@ -1,0 +1,185 @@
+{
+  "page": "Example power page",
+  "pageId": "example-page-a",
+  "pageFrame": {
+    "paper": "A4",
+    "bounds": [
+      0,
+      0,
+      1170,
+      825
+    ]
+  },
+  "regions": [
+    {
+      "id": "power",
+      "title": "Example ground link",
+      "bounds": [
+        30,
+        450,
+        220,
+        750
+      ],
+      "titleAnchor": [
+        40,
+        730
+      ]
+    }
+  ],
+  "components": [
+    {
+      "ref": "J1",
+      "anchor": [
+        60,
+        600
+      ],
+      "bounds": [
+        50,
+        590,
+        80,
+        610
+      ],
+      "attributes": {
+        "model": "Example terminal"
+      }
+    },
+    {
+      "ref": "J2",
+      "anchor": [
+        160,
+        600
+      ],
+      "bounds": [
+        140,
+        590,
+        170,
+        610
+      ],
+      "attributes": {
+        "model": "Example terminal"
+      }
+    }
+  ],
+  "pins": [
+    {
+      "pin": "J1.1",
+      "net": "GND",
+      "nc": false
+    },
+    {
+      "pin": "J2.1",
+      "net": "GND",
+      "nc": false
+    }
+  ],
+  "wiringPins": [
+    {
+      "pin": "J1.1",
+      "net": "GND",
+      "nc": false,
+      "ref": "J1",
+      "region": "power",
+      "x": 80,
+      "y": 600,
+      "side": "right",
+      "island": "wire-1",
+      "label": true
+    },
+    {
+      "pin": "J2.1",
+      "net": "GND",
+      "nc": false,
+      "ref": "J2",
+      "region": "power",
+      "x": 140,
+      "y": 600,
+      "side": "left",
+      "island": "wire-1",
+      "label": true
+    }
+  ],
+  "grid": 5,
+  "nodes": [
+    {
+      "id": "J1.1",
+      "x": 80,
+      "y": 600,
+      "terminal": true
+    },
+    {
+      "id": "J2.1",
+      "x": 140,
+      "y": 600,
+      "terminal": true
+    }
+  ],
+  "segments": [
+    {
+      "a": "J1.1",
+      "b": "J2.1",
+      "length": 60
+    }
+  ],
+  "wirePaths": [
+    {
+      "id": "wire-1",
+      "net": "GND",
+      "pins": {
+        "J1.1": [
+          "J1.1"
+        ],
+        "J2.1": [
+          "J2.1"
+        ]
+      },
+      "segments": [
+        {
+          "a": "J1.1",
+          "b": "J2.1",
+          "length": 60
+        }
+      ]
+    }
+  ],
+  "blockReviews": [
+    {
+      "id": "power",
+      "status": "pass",
+      "evidence": "Example only: block report and close-up"
+    }
+  ],
+  "sheetReview": {
+    "status": "pass",
+    "evidence": "Example only: full-page review"
+  },
+  "reopenedPages": [
+    {
+      "id": "example-page-a",
+      "evidence": "Example only: netlist read after reopening example-page-a",
+      "nets": [
+        {
+          "net": "GND",
+          "pins": [
+            "J1.1",
+            "J2.1",
+            "J3.1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "example-page-b",
+      "evidence": "Example only: netlist read after reopening example-page-b",
+      "nets": [
+        {
+          "net": "GND",
+          "pins": [
+            "J1.1",
+            "J2.1",
+            "J3.1"
+          ]
+        }
+      ]
+    }
+  ]
+}

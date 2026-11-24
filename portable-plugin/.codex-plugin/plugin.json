@@ -1,0 +1,7 @@
+{
+  "name": "ai-command-engine-companion",
+  "version": "0.1.0",
+  "description": "JLCEDA schematic and PCB workflows, local checks, and portable collaboration rules.",
+  "skills": "./skills/",
+  "requires_local_executor": true
+}

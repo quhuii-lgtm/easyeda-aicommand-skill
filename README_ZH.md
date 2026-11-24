@@ -1,31 +1,25 @@
-# AI Command Engine 技能
+# AI Command Engine AI 配套包
 
 [English](README.md)
 
-完整中英文技能 2026.11.21.1，配套插件 0.21.19。包含写入结果恢复修复及已恢复的 KiRouting 服务、权限和数据目录行为。请使用完整包，不要只复制通用桥接脚本。前台重连验收及未置前台时27／110秒观察未重连的未明边界见发布说明。
+## 三种包与安装方式
 
-中英文指南涵盖 A4 预排、直连默认 40 格及支路例外审批、折弯和布线候选、跨页连接、替代器件、TEXT 重开复验。
+| 包 | 用途与下载 | 安装位置 |
+| --- | --- | --- |
+| EDA 扩展 0.21.22 `.eext` | [GitHub 扩展下载](https://github.com/quhuii-lgtm/easyeda-aicommand/releases/tag/v0.21.22)，或从[嘉立创市场](https://jlc-ext.com/item/eda_gdqnxffl/ai-command-engine)安装 | 嘉立创 EDA 专业版 |
+| 独立中英技能 2026.11.24.1 | [完整技能 ZIP](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/download/v2026.11.24.1/ai-command-engine-skill_v2026.11.24.1_en-zh.zip) | AI 工具的技能目录 |
+| 通用 AI 配套插件 0.1.0 | [便携插件 ZIP](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/download/v2026.11.24.1/ai-command-engine-companion_v0.1.0_portable.zip) | 支持本地插件或技能导入的 AI 客户端 |
 
-本轮 PCB 指南补充分组恢复未知时的 partial 处理，以及布线启动回包丢失后按原操作 ID、PCB 和 tab 找回任务。
+**所有用户先安装 EDA 扩展；需要 AI 时，独立技能与通用 AI 插件二选一即可。** 市场只安装 EDA 扩展，不会自动安装两个 AI 包、Node.js 或代理依赖。
 
-配套技能覆盖模块复用合并与空闲代理异常退出恢复。按模块复用指南及目标实例帮助操作，代理保留外置用户数据目录适配。依赖导入资源分类前，请阅读 Existing Project 的 META.tags 样本限制。
+1. 在嘉立创扩展市场安装 EDA 扩展；或从 GitHub 下载 `.eext`，在 EDA 的“高级 → 扩展管理器 → 导入”中选择它，启用并允许外部交互。市场审核进度以实际页面为准。
+2. 选择独立技能：解压 ZIP，将完整 `ai-command-engine/` 安装到 AI 工具的技能目录，保留脚本、参考文件和个人设置，并重新加载技能。
+3. 或选择通用 AI 插件：解压 ZIP，按客户端实际支持的本地插件方式导入根目录；只支持技能的客户端，可按其技能安装方式导入包内 `skills/` 目录。不要覆盖已有全局规则。通用插件另含协作规则，是否合并到其他任务的规则文件由用户决定。
+4. 在运行 EDA 的同一电脑准备 Node.js >=20.17.0。独立技能在 `ai-command-engine/`，通用插件在 `skills/ai-command-engine/` 中运行 `npm ci --omit=dev`。两个 AI 包包含完整代理，不能只复制源码仓库的通用 `bridge/` 脚本。
+5. 让 AI 先读取所选包的技能入口和连接指南，后台启动代理，再核对实际 EDA 实例、目标工程和图页，先做只读查询，再开始绘图。Windows 可按指南使用 `scripts/start-proxy.ps1`；使用启动器返回的实际地址。不要为安装包检查而结束现有共享桥接。
 
-## 安装与使用
+通用插件 0.1.0 已离线核包，**Codex、Claude、Kimi、OpenCode 均尚未实机安装验证**。包内提供兼容入口不等于四种客户端均已验证可用。它的内嵌技能版本标识为 2026.11.22.3；独立技能版本为 2026.11.24.1。两者共用的运行脚本、参考资料一致，插件入口额外加载协作规则，版本号分别管理。
 
-1. 从[技能 2026.11.21.1 发布页](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/tag/v2026.11.21.1)下载[中英双语 ZIP](https://github.com/quhuii-lgtm/easyeda-aicommand-skill/releases/download/v2026.11.21.1/ai-command-engine-skill_v2026.11.21.1_en-zh.zip)，将完整 `ai-command-engine/` 安装到 AI 工具的技能目录。保留入口、`references/`、`scripts/`、依赖文件、`VERSION` 和 `LICENSE`。
-2. 使用 Node.js >=20.17.0，在技能根目录运行 `npm ci --omit=dev`。无需下载或构建完整插件源码。
-3. 让 AI 阅读技能并按[连接说明](ai-command-engine/references/zh/setup.md)运行 `scripts/start-proxy.ps1`，在 Windows 隐藏后台启动代理。
-4. 从[插件 v0.21.19 发布页](https://github.com/quhuii-lgtm/easyeda-aicommand/releases/tag/v0.21.19)安装配套 `.eext` 并允许外部交互。插件自动发现兼容代理；开始修改前用只读 `project.getInfo` 核对目标连接。
+更多步骤见[中文首次安装指南](https://github.com/quhuii-lgtm/easyeda-aicommand/blob/main/docs/QUICKSTART_ZH.md)。SMT 开放平台查询另需密钥，普通绘图不需要。保留个人设置、原工程和在途任务；文件更新不会自动替换正在运行的旧代理。市场与 GitHub 的审核／公开版本可能不同。
 
-2026.11.21.1 会在 `49720–49729` 中选择可用端口，插件扫描同一范围发现兼容代理。Windows 启动器会返回实际 `baseUrl`；显式指定端口时只使用该端口。
-
-代理数据保存在技能目录外。更新技能不覆盖凭据与备份；已有兼容代理继续使用原数据目录，不强行重启。Node运行依赖首次安装需要联网，正常绘图不要求SMT密钥。
-
-## 文件
-
-- [SKILL.md](ai-command-engine/SKILL.md)：英文入口；[SKILL_ZH.md](ai-command-engine/SKILL_ZH.md)：中文入口。
-- [references/](ai-command-engine/references/)：连接、绘图顺序、命令与验收要求。
-- [scripts/](ai-command-engine/scripts/)：代理、后台启动器和可选 Python 助手。
-- [package.json](ai-command-engine/package.json)与锁文件：最小代理运行依赖。
-
-开发测试与发布历史留在安装目录外。技能包排除运行日志、备份、凭据及 `node_modules`。插件 `.eext` 在[插件仓库](https://github.com/quhuii-lgtm/easyeda-aicommand)独立发布。安装技能不授权修改工程；目标实例、操作与验收按用户任务确定。
+独立入口：[SKILL_ZH.md](ai-command-engine/SKILL_ZH.md)。通用插件源码：[portable-plugin](portable-plugin/README_ZH.md)。

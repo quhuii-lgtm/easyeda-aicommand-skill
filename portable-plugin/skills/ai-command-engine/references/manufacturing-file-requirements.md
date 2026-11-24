@@ -1,0 +1,124 @@
+# Manufacturing File Requirements
+
+Delivery order: confirm the saved version → export → inspect the files independently → import to the manufacturer or assembly platform if authorized → verify the preview and submission details.
+
+This page covers manufacturing-file export, formats, and platform checks. Manage project-stage acceptance, pending tests, and fabrication feedback according to the project plan. Use the production-export command page linked from the skill entry and follow help for the installed version. Checking a platform page does not mean the plugin can upload files, place orders, or pay.
+
+Use available tools within existing authorization. Check current platform requirements before use.
+
+## Manufacturing and Assembly Outputs
+
+### Confirm the Output Version
+
+Export from one confirmed saved version. Record project, board, revision, date, and file list. Identify the chosen assembly variant when there are multiple options. Save hashes when file identity matters. Do not mix copper, drill, BOM, or coordinate files from different revisions.
+
+Required formats and files depend on the manufacturer. Common categories to check include:
+
+| Category | Content and checks |
+| --- | --- |
+| PCB fabrication | Required copper, solder mask, silkscreen, board outline, drill/slot data, and other manufacturing data. Check each layer's purpose and completeness. |
+| Stackup and special processes | Materials, layer order, copper and board thickness, impedance, and via treatment required by the order. Match the actual design. |
+| BOM | Designators, full part numbers, footprints, quantities, assembly status, and options. State critical parameters clearly. |
+| Pick-and-place coordinates | Designator, X/Y, units, origin, rotation, and top/bottom side. Match BOM and PCB item by item. |
+| Stencil | Check top and bottom paste layers when a stencil is needed. Solder mask is not a substitute for stencil apertures. |
+| Assembly notes | Required orientation, polarity, DNP, substitutions, hand placement, and special processes. |
+| Test/programming | Project-required firmware version, interface, steps, fixture, and pass criteria. |
+
+### Gerber Export in Professional Edition
+
+For a custom export, check selected layers, objects, and related options. Official instructions say the “Order PCB” button uses one-click export settings and does not use custom Gerber settings. If custom settings are required, export and inspect the Gerbers before uploading an order.
+
+Top and bottom Paste Mask files are used for stencils. Check drill manufacturing files separately from optional drill tables and notes. A drill table or reference-only drill layer cannot replace manufacturing drill data. Do not assume custom or documentation layers are manufacturing layers. If they are required for production, state their purpose and confirm with the manufacturer.
+
+Source: [Professional Edition Gerber export](https://prodocs.lceda.cn/cn/pcb/export-pcb-fabrication-file-gerber/index.html).
+
+### Independent Review
+
+Use an independent viewer or the manufacturer's parsed preview to inspect manufacturing data. Confirm the outline is closed and scaled correctly, layer order is correct, and hole/slot locations and attributes are right. Check that copper, solder mask, and silkscreen match.
+
+Compare BOM and coordinates for every designator. Classify hand-placed, DNP, mechanical, and other exceptions clearly. Even after grouping BOM items, check each designator's part number, quantity, and assembly state; equal totals do not prove item-level agreement.
+
+Check coordinate conventions against the export tool and manufacturer. Verify rotation, origin, and bottom-side handling separately. Do not mirror all bottom-side parts or add a fixed angle by default. Pay special attention to connectors, diodes, ICs, polarized capacitors, and custom footprints.
+
+Determine panelization, process edges, tooling holes, and fiducials for the actual manufacturing plan. Clarify which items are the designer's responsibility and which belong to the manufacturer to avoid omissions or duplication.
+
+## Manufacturer and Assembly Platforms
+
+### Authorization and Order Identity
+
+Platform uploads, sharing files, order submission, and payment require the user's existing authorization. Preparing files or completing a design does not authorize external upload, an order, or payment.
+
+Confirm manufacturer, project, revision, quantity, and purpose. State whether this is a prototype run or production. Record the revision and impact of changes made on the platform.
+
+### Bare PCB Manufacturing Import
+
+- Check that the platform's recognized board size, layer count, outline, holes, and slots match the uploaded files.
+- Check material, board thickness, copper thickness, finish, solder mask, and required special processes.
+- Compare drawing copper thickness, the copper thickness used for checks, and the order thickness for every layer.
+- Record differences and their resolution when those values disagree.
+- If order copper thickness changes, recheck affected current capacity, temperature rise, and impedance requirements.
+- Updating order parameters does not update the drawing's stackup.
+- Before submission, confirm discrepancies are resolved. Decide whether unresolved items should block submission based on their actual impact.
+- Check the mapping between exported and manufacturing layers, drills/slots, copper-to-edge clearance, and manufacturer-raised DFM issues.
+- Do not let platform defaults silently replace design requirements.
+- If a process is unsupported, state the conflict and available options.
+
+### JLC China SMT Import Format
+
+This section applies only to the current JLC China SMT file-import flow. Keep complete project BOM records separate from the platform's required columns.
+
+- Official required BOM fields: `Comment`, `Designator`, and `Footprint`. `Quantity` is recommended.
+- If `Quantity` is provided, it must match the number of valid designators in that row.
+- Parts with the same model, specification, and footprint may share a row of designators.
+- Use one coordinate row per designator.
+- If a JLC part number is supplied, the platform prioritizes matching by that number. Resolve any conflict between the number and part parameters first.
+- Consistently exclude designators not assembled by SMT from both the assembly BOM and coordinate file.
+- Keep DNP and hand-assembly details in the project assembly record. Do not rely on custom notes to carry production requirements automatically.
+
+Source: [JLC BOM and coordinate format](https://www.jlc.com/portal/server_guide_48022.html).
+
+For the coordinate file, check `Designator`, `Mid X`, `Mid Y`, `Layer`, and `Rotation`. `Mid X/Y` use the component center. Check rotation about the component axis. Prefer mm; if using mil, mark the unit after each value. Do not append units to the `Mid X` and `Mid Y` column names. Record the export origin. Use `Top`/`T` or `Bottom`/`B` for `Layer`, based on the component body side. Confirm unusual components against their actual assembly requirements. The official format does not specify an origin location; this project requires checking coordinate-to-PCB alignment in the import preview.
+
+Source: [Coordinate format guide](https://www.jlc.com/portal/q7i53182.html).
+
+For JLC prototype assembly exported from Professional Edition, leave bottom-side coordinate mirroring unchecked. Do not enable bottom-side rotation mirroring without verification. This setting is not a universal rule for all EDA tools or assembly houses. After import, check bottom-side position, rotation, and polarity item by item.
+
+Source: [Professional Edition pick-and-place export](https://prodocs.lceda.cn/cn/pcb/export-pick-and-place-file/).
+
+### BOM Matching and Supply
+
+- Check the manufacturer's full part number, footprint, critical parameters, and supplier item number for each platform match.
+- Check matched designators, quantities, side, DNP status, assembly variants, and shortages.
+- Check availability for the actual order quantity, assembly support, feeder/waste requirements, and costs.
+- Historical stock and prices are not current commitments.
+- Recheck electrical properties, pinout, footprint, surrounding circuit, and manufacturing impact for platform-recommended substitutes. Similar names do not prove equivalence.
+- Record out-of-stock, self-purchased, customer-supplied, hand-assembled, and DNP parts separately.
+- Confirm the final BOM and coordinate file agree.
+
+### Assembly Preview
+
+After import, compare against the PCB and footprint drawings. Check each designator's part, position, side, rotation, and polarity. Pay special attention to pin 1, diode direction, polarized capacitors, connector orientation, and parts the platform cannot identify reliably.
+
+Do not treat automatic matching or a quote as a review. If an offset or rotation is wrong, first check coordinate conventions and library mapping. Correct the file or platform item, then inspect the assembly preview again.
+
+### Before Submission
+
+Confirm that upload revision, order process, BOM and coordinates, matched item numbers, DNP status, placement direction, quantities, and unresolved manufacturing or material issues are consistent. If the platform changes anything, update the corresponding local record. Do not keep an old revision marked as approved for production.
+
+Unresolved manufacturing or assembly conflicts block the affected production submission. Incomplete prototype tests remain pending verification.
+
+### Programming and Test Handoff
+
+- Provide programming-pad and test-point locations, board side, pin order, and net list.
+- State programmer, power method, target voltage, and required reset or boot actions.
+- State test items, instruments, reference ground, and pass range.
+- Ensure bare test pads are not mistakenly included in the assembly BOM or coordinate file.
+- Check the quantity and default state of 0-ohm resistors.
+- Restore and inspect any 0-ohm resistor removed or replaced during testing before delivery, as specified by the plan.
+- Prototype verification includes actual programming and probe-contact checks.
+## Plugin preflight
+
+- Obtain Gerber, BOM and placement files from the same board revision. Check command availability in the target window.
+- Use `pcb.preflightAssembly` to assign each reference to manual assembly, pick and place, or omit. Check both placement reference lists before saving. Provide an original Gerber paste region when checking stencil openings for manually assembled parts.
+- Use `pcb.exportGerber` to export the original archive and list its actual entries. Use `pcb.inspectManufacturingPackage` to check the outline, drilling and production/reference files. Keep the original archive and review coverage before saving selected entries.
+- Save original bytes from `pcb.exportPickPlace` and `schematic.exportBom` using the reported actual encoding, delimiter and filename.

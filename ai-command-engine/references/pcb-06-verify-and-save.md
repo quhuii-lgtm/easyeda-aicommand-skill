@@ -2,6 +2,24 @@
 
 Use `__help` in the target window for parameters, defaults, results, and examples.
 
+<a id="pcb-stage-check"></a>
+## PCB Stage Check
+
+At each applicable checkpoint, read the current board, run `node <skill>/scripts/check-pcb-stage.mjs <check.json>`, and retain its JSON output. File paths are relative to the configuration file. Look up command parameters with `__help` in the target window.
+
+| `stage` | When to run and what to provide |
+| --- | --- |
+| `placement` | After placing or moving parts in each functional area and before routing that area. Set `placementFile` to the placement checker input with the current board digest. Check body, board, and slot clearances, nearby parts, and assembly space. For fine-pitch parts, set `manufacturing.exportTemporary: true` or supply matching Gerber to check mask webs and merged openings. |
+| `routing` | After each routing, trace edit, or drilling batch and after finishing each functional area. Set `routing` to a region or nets accepted by `pcb.reviewLocalRouting`. Check trace width, copper clearance, drill size, annular rings, drill spacing, copper to board and cutout edges, and connections at the area boundary. When changes affect nearby vias, exposed pads, or fine-pitch pads, recheck mask and paste openings using current Gerber and drill files. Compare board-wide connectivity and DRC against the pre-edit results. |
+| `repour` | After each actual refill. Optionally set `copper` to `[{primitiveId,sections:[{id,start,end,minimumMm}]}]`. Section endpoints use mil and the width limit uses mm. Check key power and ground ties and added disconnections. |
+| `manufacturing` | After generating the final Gerber, drill, BOM, and placement files and before release. Set `manufacturing.gerber`, `revision`, and `object`. If available, supply `stencil` and `assembly` with `bom`, `placement`, `assignment`, and actual part dimensions. |
+
+Common configuration fields are `proxyUrl`, `instanceId`, `projectUuid`, `docUuid`, and `stage`. Record the process authority in `process.source`. Supply order material, thickness, and copper weights as `process.pcbDfm` using the current `pcb.runDfm` help. Set `process.minimumViaHoleGapMm` and `process.minimumMaskBridgeMm` to the confirmed hole-edge gap and mask-opening web for this order. To retain a temporary export, set `manufacturing.saveTemporaryAs` to a new file path.
+
+Identify each functional area by name, board region, and relevant references or nets. Include its boundary and nearby objects that can affect it. For checks that run on the whole board, locate the relevant findings in the area and record the coverage. Several areas can share one board readback. Keep separate placement and routing results for each area with their PCB revisions.
+
+Resolve findings that affect routing or delivery and rerun the affected checks. Review `incomplete` items and rerun stale reports. Supply separate evidence for omitted checks such as assembly interference, merged openings, special holes, hole-to-copper spacing across layers, minimum copper neck across the full region, islands, and actual connectivity. Check current, temperature rise, impedance, and return paths against the project requirements.
+
 ## Before-and-After Comparison
 
 1. Before each batch affecting nets, traces, vias or copper, retain board-wide ratlines, connection and DRC details, and relevant objects and rules. Complete paginated reads and record revision and coverage.
@@ -45,6 +63,8 @@ After placement, local routing or copper work, inspect the affected scope in thi
 | Visual candidate | Follow-up verification |
 | --- | --- |
 | Broken/missing trace or trace-to-pad contact | Read pad nets and trace endpoints; combine `pcb.reviewLocalRouting`, net readback and applicable DRC. Visible contact does not prove same-net or cross-layer connectivity. |
+| Suspected unused routing | Use `pcb.reviewRoutingRemnants` to scan the board or named nets for unused branches, same-net overlaps and vias with limited observed contact. Check the recorded layers, actual copper, pad coverage and protection hints. Review potential stitching, thermal and current-sharing duties before approving any removal. After an approved cleanup, recheck affected connectivity and clearance, run applicable DRC and compare the saved, reopened board. |
+| Routing detours | Use `pcb.reviewRoutingDetours` to check actual path length, turns, vias and backtracking. Review same-layer shortcuts against the reported obstacles and rules. A geometry preview still needs verification. The check leaves routing untouched. |
 | Separate copper fragment or suspected island | Check actual fill, net, vias and connections on relevant layers. A small fragment may connect through another layer; missing connection evidence cannot establish an island. |
 | Narrow copper neck | Use `pcb.reviewCopperShape` with a section approximately perpendicular to the local copper path and extending beyond both edges. Read width and coverage using current help. Do not infer precise dimensions from pixels or a whole-zone minimum from one section. |
 | Special pad or blind/buried-via contact | Compare pad shape, drill size, layer span and connections on each layer. A single-layer image cannot establish via span; list unsupported geometry explicitly. |
@@ -121,6 +141,8 @@ DRC, manufacturing geometry checks, and production-order consistency are separat
 ## Order checks and manufacturing profile
 
 `pcb.runDfm` checks PCB process rules; `pcb.runSmtDfm` checks SMT assembly; `pcb.checkSameNetPadSpacing` checks same-net pad spacing. All three are available under AI Command Engine on the PCB page and use the same processing and summary as the commands. These checks do not edit the board, save, upload, or place an order.
+
+Use the confirmed machine-placement designators for SMT DFM. For final single-board or panel files, use `dfm.inspectManufacturingFiles` with the matching Gerber, drill files, placement BOM and coordinates. Inspect mask openings, body and edge clearance, drill-to-paste overlap, and mouse-bite candidates. Check missing inputs in the report. Identify whether the paste file is design artwork or the actual stencil.
 
 Ask the user for the copper weight for this order. Verify that the target help supports the required inputs. Copper weight applies to PCB DFM only.
 

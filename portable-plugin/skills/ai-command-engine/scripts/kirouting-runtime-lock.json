@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "tool": "KiCadRoutingTools",
+  "version": "0.18.0",
+  "tag": "v0.18.0",
+  "commit": "21bdace6575876aaec501017aea29f098d2864fc",
+  "releaseUrl": "https://github.com/drandyhaas/KiCadRoutingTools/releases/download/v0.18.0/KiCadRoutingTools-0.18.0.zip",
+  "releaseSha256": "500ad5a32743e80420809a3a190125df97e70b5a93832f4a1cd67057413e3bf0",
+  "license": {
+    "spdx": "MIT",
+    "pathInRelease": "plugins/LICENSE",
+    "copyright": "Copyright (c) 2026 drandyhaas"
+  },
+  "platforms": {
+    "win32-x64": {
+      "python": {
+        "version": "3.12",
+        "venvSupported": true,
+        "abi": "cp312-win_amd64"
+      },
+      "rustExtensionVersion": "0.18.1",
+      "rustExtension": {
+        "pathInRelease": "plugins/rust_router/grid_router-windows-x86_64.pyd",
+        "sha256": "ea25010302f1b77973b19e3cc7299aefe57c60862eb85d1f7e74b286c2ebfe80"
+      },
+      "packages": [
+        {
+          "name": "numpy",
+          "version": "2.5.4",
+          "filename": "numpy-2.5.4-cp312-cp312-win_amd64.whl",
+          "url": "https://files.pythonhosted.org/packages/12/33/fefe62073dc8acfd0f2b9ed7c003af2f50aa61555e113e6db02b8f79f145/numpy-2.5.4-cp312-cp312-win_amd64.whl",
+          "sha256": "a7b1b6353e36a7e50de2973a38d705c88ee93adcf120673cee7f45a4a3fa223a"
+        },
+        {
+          "name": "scipy",
+          "version": "1.18.1",
+          "filename": "scipy-1.18.1-cp312-cp312-win_amd64.whl",
+          "url": "https://files.pythonhosted.org/packages/39/e7/979fd14e75008623df31ba70d6bb144700f68feadcea042021c06a05bf82/scipy-1.18.1-cp312-cp312-win_amd64.whl",
+          "sha256": "5e4d44984abc0020154ea81b247adeddcc3ac5527b975ff798bd1ba0adc513c2"
+        },
+        {
+          "name": "shapely",
+          "version": "2.2.0",
+          "filename": "shapely-2.2.0-cp312-cp312-win_amd64.whl",
+          "url": "https://files.pythonhosted.org/packages/f6/26/ba9192f0a72c830aa8cc1c61e207ada57cc54b7de81668b1836f575ee717/shapely-2.2.0-cp312-cp312-win_amd64.whl",
+          "sha256": "90895df6542ae039fc6557dec6194e3509e883fbd6f5788e3c3e7a38fe46b257"
+        }
+      ]
+    }
+  }
+}
